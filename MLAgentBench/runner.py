@@ -38,14 +38,13 @@ def run(agent_cls, args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--task", type=str, default="debug", help="task name")
+    parser.add_argument("--research-problem", type=argparse.FileType("r"), required=True, help="research problem")
     parser.add_argument("--log-dir", type=str, default="./logs", help="log dir")
     parser.add_argument("--work-dir", type=str, default="./workspace", help="work dir")
     parser.add_argument("--max-steps", type=int, default=50, help="number of steps")
     parser.add_argument("--max-time", type=int, default=5* 60 * 60, help="max time")
     parser.add_argument("--device", type=int, default=0, help="device id")
     parser.add_argument("--python", type=str, default="python", help="python command")
-    parser.add_argument("--interactive", action="store_true", help="interactive mode")
     parser.add_argument("--resume", type=str, default=None, help="resume from a previous run")
     parser.add_argument("--resume-step", type=int, default=0, help="the step to resume from")
 

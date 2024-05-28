@@ -48,28 +48,16 @@ class Environment:
         self._log_dir = os.path.join(args.log_dir, "env_log")
         self._setup_log_dir()
 
-        if not args.interactive:
-            self._benchmark_folder_name, self._research_problem = get_task_info(args.task)
-            self._work_dir = os.path.join(args.work_dir, self.benchmark_folder_name)
-            self._read_only_files = []
-            self._initialize_task_env() # set up work dir and log dir
+        with args.research_problem as f:
+            self._research_problem = f.read().strip()
+        log_file = os.path.join(self.log_dir, "create_benchmark_folder_name.log")
+        self._benchmark_folder_name = create_benchmark_folder_name(self._research_problem, log_file)
+        self._work_dir = os.path.join(args.work_dir, self._benchmark_folder_name)
+        self._read_only_files = []
 
-        else:
-            self._research_problem = input("What is the task: ")
-            log_file = os.path.join(self.log_dir, "create_benchmark_folder_name.log")
-            self._benchmark_folder_name = create_benchmark_folder_name(self._research_problem, log_file)
-            self._work_dir = args.work_dir
-            w = input(f"Enter the folder path (Research Assistant will not read anything outside this folder) default: {args.work_dir}: ")
-            if w != "":
-                self._work_dir = w
-            self._read_only_files = []
-
-            self._initialize_interactive_env() # set up work dir and log dir
+        self._initialize_interactive_env() # set up work dir and log dir
 
         self._action_infos =  {t.name: t for t in LOW_LEVEL_ACTIONS + HIGH_LEVEL_ACTIONS}
-
-        if not args.interactive:
-            del self._action_infos["Request Help"]
 
         self._static_kwargs_for_tools = {
             "device": args.device,
