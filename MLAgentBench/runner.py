@@ -8,11 +8,11 @@ from MLAgentBench import LLM
 from MLAgentBench.environment import Environment
 from MLAgentBench.agents.agent import Agent, SimpleActionAgent, ReasoningActionAgent
 from MLAgentBench.agents.agent_research import ResearchAgent
-from MLAgentBench.agents.agent_langchain  import LangChainAgent
-try:
-    from MLAgentBench.agents.agent_autogpt  import AutoGPTAgent
-except:
-    print("Failed to import AutoGPTAgent; Make sure you have installed the autogpt dependencies if you want to use it.")
+# from MLAgentBench.agents.agent_langchain  import LangChainAgent
+# try:
+#     from MLAgentBench.agents.agent_autogpt  import AutoGPTAgent
+# except:
+#     print("Failed to import AutoGPTAgent; Make sure you have installed the autogpt dependencies if you want to use it.")
 
 
 def run(agent_cls, args):
