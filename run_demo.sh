@@ -3,12 +3,14 @@
 prob=$1
 name=$2
 
-ts=$(date +%s)
+ts=$(date -I) 
 
-if [ -d $name/$ts ]; then
-    echo "Folder $name/$ts already exists. removing it"
-    rm -rf $name/$ts
+logdir="logs/$name/$ts"
+
+if [ -d $logdir]; then
+    echo "Folder $logdir already exists. removing it"
+    rm -rf $logdir
 fi
-mkdir -p $name/$ts
+mkdir -p $logdir
 
-python -u -m MLAgentBench.runner --research-problem $prob --log-dir $name/$ts --work-dir workspaces/$name/$ts > $name/$ts/log 2>&1
+python -u -m MLAgentBench.runner --research-problem $prob --log-dir $logdir --work-dir workspaces/$name/$ts > $logdir/log 2>&1
