@@ -19,27 +19,9 @@ from dacite import from_dict
 from .low_level_actions import LOW_LEVEL_ACTIONS
 from .high_level_actions import HIGH_LEVEL_ACTIONS
 from .schema import Step, Trace, EnvException, TooLongPromptError, LLMError, EnhancedJSONEncoder 
-from .LLM import complete_text_claude
 from .prepare_task import prepare_task, get_task_info
 
 class TimeoutException(Exception): pass
-
-
-def create_benchmark_folder_name(research_problem, log_file):
-    """Create a benchmark folder name from a research problem in interactive mode"""
-
-    prompt = f"""Can you give a short name for this research problem ? 
-
-{research_problem}"
-
-The name should be short and valid as a folder name, e.g. "my_research_problem". Given the name in this format:
-[research problem name]: my_research_problem [end]
-
-"""
-    response = complete_text_claude(prompt, stop_sequences=["[end]"], log_file=log_file)
-    benchmark_folder_name = response.split("[research problem name]: ")[-1].split(" [end]")[0]
-    return benchmark_folder_name
-
 
 class Environment:
     def __init__(self, args):
@@ -50,9 +32,8 @@ class Environment:
 
         with args.research_problem as f:
             self._research_problem = f.read().strip()
-        log_file = os.path.join(self.log_dir, "create_benchmark_folder_name.log")
-        self._benchmark_folder_name = create_benchmark_folder_name(self._research_problem, log_file)
-        self._work_dir = os.path.join(args.work_dir, self._benchmark_folder_name)
+        args.research_problem = args.research_problem.name
+        self._work_dir = args.work_dir
         self._read_only_files = []
 
         self._initialize_interactive_env() # set up work dir and log dir
@@ -75,10 +56,6 @@ class Environment:
     @property
     def research_problem(self):
         return self._research_problem
-
-    @property
-    def benchmark_folder_name(self):
-        return self._benchmark_folder_name
 
     @property
     def log_dir(self):
@@ -178,8 +155,9 @@ class Environment:
 
 
     def _initialize_interactive_env(self):
+        os.makedirs(os.path.join(self.work_dir), exist_ok=True)
         # set up read only files
-        can_modify_files = input("What existing files can Research Assistant modify (relative paths separated by comma)? default is nothing: ").split(",")
+        can_modify_files = '*'
         size = 0
         self._read_only_files = []
         for path, subdirs, files in os.walk(os.path.join(self.work_dir)):
@@ -193,20 +171,27 @@ class Environment:
                 size += os.path.getsize(os.path.join(path, f))
                 
         # try save this task to a benchmark folder
-        os.makedirs(os.path.join(self.log_dir, self.benchmark_folder_name), exist_ok=True)
+        os.makedirs(os.path.join(self.log_dir), exist_ok=True)
         if size / 1e6 < 10:
             # save if the size is smaller than 10MB
-            shutil.copytree(self.work_dir, os.path.join(self.log_dir, self.benchmark_folder_name, "env"))
-        os.makedirs(os.path.join(self.log_dir, self.benchmark_folder_name, "scripts"), exist_ok=True)
-        with open(os.path.join(self.log_dir, self.benchmark_folder_name, "scripts", "research_problem.txt"), "w") as f:
+            shutil.copytree(self.work_dir, os.path.join(self.log_dir, "env"))
+        os.makedirs(os.path.join(self.log_dir, "scripts"), exist_ok=True)
+        with open(os.path.join(self.log_dir, "scripts", "research_problem.txt"), "w") as f:
             f.write(self.research_problem)
-        with open(os.path.join(self.log_dir, self.benchmark_folder_name, "scripts", "read_only_files.txt"), "w") as f:
+        with open(os.path.join(self.log_dir, "scripts", "read_only_files.txt"), "w") as f:
             f.write("\n".join(self.read_only_files))
 
         # init backup folder and remove all content if it exists
         if os.path.exists(os.path.join(self.work_dir, "backup")):
             shutil.rmtree(os.path.join(self.work_dir, "backup"))
         os.mkdir(os.path.join(self.work_dir, "backup"))
+
+        # restore data if resuming
+        if self.args.resume:
+            shutil.rmtree(self.work_dir)
+            resume_dir = os.path.join(self.log_dir, "traces" , f"step_{self.args.resume_step}_files")
+            print("Restoring workspace ing from {}".format(resume_dir))
+            shutil.copytree(resume_dir, self.work_dir, symlinks=True)
 
 
     def _initialize_trace(self):
@@ -333,35 +318,21 @@ class Environment:
 
     def save(self, curr_step):
         """ Save the trace and snapshot of the workspace folder """     
+        print(f'Saving {curr_step}')
         with open(os.path.join(self.log_dir, f"trace.json"), "w") as f:
             json.dump(self.trace, f, indent=4, cls=EnhancedJSONEncoder)
 
         ##### save a snapshot of the current step
-        save_folder = os.path.join(self.log_dir, f"traces/step_{curr_step}_files")
+        save_folder = os.path.join(self.log_dir, "traces", f"step_{curr_step}_files")
         if os.path.exists(save_folder):
             shutil.rmtree(save_folder)
-        os.makedirs(save_folder)
 
-        # save files in the folder that are not read only
-        for path, subdirs, files in os.walk(os.path.join(self.work_dir)):
-
-            relpath = os.path.relpath(path, self.work_dir)
-            dest = os.path.join(save_folder, relpath)
-
-            for file_name in files:
-                file_path = os.path.join(relpath, file_name)
-                if file_path not in self.read_only_files:
-                    # check wether the file to copy is part of self.log_dir
-                    if  os.path.abspath(os.path.join(self.work_dir, file_path)).startswith(os.path.abspath(self.log_dir.split("/env_log")[0])):
-                        continue                    
-                    if not os.path.exists(dest):
-                        os.makedirs(dest)            
-                    shutil.copyfile(os.path.join(self.work_dir, file_path), os.path.join(save_folder, file_path))
+        shutil.copytree(self.work_dir, save_folder, symlinks=True)
 
     ############## for logging convenience ##############
 
     def get_task_description(self):
-        return self.research_problem, self.benchmark_folder_name
+        return self.research_problem, ""
 
     @property
     def low_level_actions(self):

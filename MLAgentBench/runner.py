@@ -65,10 +65,6 @@ if __name__ == "__main__":
     parser.add_argument("--max-observation-steps-in-context", type=int, default=3, help="max observation steps in context")
     parser.add_argument("--max-retries", type=int, default=5, help="max retries")
 
-    # langchain configs
-    parser.add_argument("--langchain-agent", type=str, default="zero-shot-react-description", help="langchain agent")
-
-
     args = parser.parse_args()
     print(args, file=sys.stderr)
     if not args.retrieval or args.agent_type != "ResearchAgent":

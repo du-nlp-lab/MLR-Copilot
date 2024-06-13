@@ -6,12 +6,29 @@ from MLAgentBench.LLM import complete_text_fast, complete_text
 from MLAgentBench.schema import Action
 from .agent import Agent
 
+external_libs = [
+    "numpy",
+    "pandas",
+    "matplotlib",
+    "seaborn",
+    "torch",
+    "torchvision",
+    "tensorflow",
+    "keras",
+    "transformers",
+    "datasets",
+    "sklearn"
+]
+
 initial_prompt = """You are a helpful research assistant. You have access to the following tools:
 {tools_prompt}
 
 Research Problem: {task_description}
 
 You do not know anything about this problem so far. 
+
+You may only use Python and can only use the following external libraries in your code:
+{external_libs}
 
 Follow these instructions and do not forget them:
 - First, come up with a high level plan based on your understanding of the problem and available tools and record it in the Research Plan and Status. You can revise the plan later.
@@ -52,7 +69,7 @@ class ResearchAgent(Agent):
         self.valid_format_entires = ["Reflection",  "Research Plan and Status","Fact Check", "Thought","Action", "Action Input"] # use all entries by default
         if args.valid_format_entires:
             self.valid_format_entires = args.valid_format_entires
-        self.initial_prompt = initial_prompt.format(tools_prompt=self.tools_prompt, tool_names=self.prompt_tool_names,  task_description=env.research_problem, format_prompt="\n".join([f"{k}: {format_prompt_dict[k]}" for k in self.valid_format_entires]))
+        self.initial_prompt = initial_prompt.format(tools_prompt=self.tools_prompt, tool_names=self.prompt_tool_names,  task_description=env.research_problem, format_prompt="\n".join([f"{k}: {format_prompt_dict[k]}" for k in self.valid_format_entires]), external_libs=", ".join(external_libs))
 
     def run(self, env):
         last_steps = self.args.max_steps_in_context

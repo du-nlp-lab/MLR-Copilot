@@ -1,1 +1,1 @@
-docker run -it --user root -v "$(pwd)":/MLAgentBench -w /MLAgentBench qhwang123/researchassistant:latest
+docker run -it --gpus all --user root -v "$(pwd)":/MLAgentBench -w /MLAgentBench 'tortcode/autoresearch:1.0'
