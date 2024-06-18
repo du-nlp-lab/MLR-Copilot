@@ -18,6 +18,7 @@ from dacite import from_dict
 
 from .low_level_actions import LOW_LEVEL_ACTIONS
 from .high_level_actions import HIGH_LEVEL_ACTIONS
+from .p2m_actions import P2M_ACTIONS
 from .schema import Step, Trace, EnvException, TooLongPromptError, LLMError, EnhancedJSONEncoder 
 from .prepare_task import prepare_task, get_task_info
 
@@ -38,7 +39,7 @@ class Environment:
 
         self._initialize_interactive_env() # set up work dir and log dir
 
-        self._action_infos =  {t.name: t for t in LOW_LEVEL_ACTIONS + HIGH_LEVEL_ACTIONS}
+        self._action_infos =  {t.name: t for t in LOW_LEVEL_ACTIONS + HIGH_LEVEL_ACTIONS + P2M_ACTIONS}
 
         self._static_kwargs_for_tools = {
             "device": args.device,

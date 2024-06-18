@@ -6,6 +6,8 @@ from MLAgentBench.LLM import complete_text_fast, complete_text
 from MLAgentBench.schema import Action
 from .agent import Agent
 
+from MLAgentBench.prompt2model.prompt_parser import TaskType, PromptBasedInstructionParser
+
 external_libs = [
     "numpy",
     "pandas",
@@ -69,7 +71,10 @@ class ResearchAgent(Agent):
         self.valid_format_entires = ["Reflection",  "Research Plan and Status","Fact Check", "Thought","Action", "Action Input"] # use all entries by default
         if args.valid_format_entires:
             self.valid_format_entires = args.valid_format_entires
-        self.initial_prompt = initial_prompt.format(tools_prompt=self.tools_prompt, tool_names=self.prompt_tool_names,  task_description=env.research_problem, format_prompt="\n".join([f"{k}: {format_prompt_dict[k]}" for k in self.valid_format_entires]), external_libs=", ".join(external_libs))
+        self.prompt_spec = PromptBasedInstructionParser(TaskType.TEXT_GENERATION)
+        self.prompt_spec.parse_from_prompt(env.research_problem)
+        task_desc = f'Instruction: {self.prompt_spec.instruction}\nExamples: {self.prompt_spec.examples}'
+        self.initial_prompt = initial_prompt.format(tools_prompt=self.tools_prompt, tool_names=self.prompt_tool_names,  task_description=task_desc, format_prompt="\n".join([f"{k}: {format_prompt_dict[k]}" for k in self.valid_format_entires]), external_libs=", ".join(external_libs))
 
     def run(self, env):
         last_steps = self.args.max_steps_in_context
