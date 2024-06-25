@@ -10,10 +10,10 @@ enc = tiktoken.get_encoding("cl100k_base")
 try:   
     import anthropic
     # setup anthropic API key
-    anthropic_client = anthropic.Anthropic(api_key=open("claude_api_key.txt").read().strip())
+    anthropic_client = anthropic.Anthropic(api_key=os.environ["CLAUDE_API_KEY"])
 except Exception as e:
     print(e)
-    print("Could not load anthropic API key claude_api_key.txt.")
+    print("Could not load anthropic API key")
     
 def log_to_file(log_file, prompt, completion, model, max_tokens_to_sample):
     """ Log the prompt and completion to a file."""

@@ -32,3 +32,5 @@ trained_model/
 trained_tokenizer/
 
 /prompt2model/
+
+.env

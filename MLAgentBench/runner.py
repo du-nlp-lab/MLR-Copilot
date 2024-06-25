@@ -4,6 +4,8 @@ This file is the entry point for MLAgentBench.
 
 import argparse
 import sys
+from dotenv import load_dotenv
+load_dotenv()
 from MLAgentBench import LLM
 from MLAgentBench.environment import Environment
 from MLAgentBench.agents.agent import Agent, SimpleActionAgent, ReasoningActionAgent
