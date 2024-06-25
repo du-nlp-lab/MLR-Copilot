@@ -62,3 +62,22 @@ networkx
 cchardet
 pytest
 dacite
+python-dotenv
+
+# for p2m specifically
+datasets
+fastapi
+gradio==3.38.0
+bert_score
+tevatron
+faiss-cpu
+mdtex2html
+retriv
+tiktoken
+aiolimiter
+pyfiglet
+termcolor
+psutil
+protobuf
+nest-asyncio
+litellm
