@@ -1,6 +1,9 @@
 import os
+import torch
 import datasets
-from .schema import ActionInfo, EnvException
+import transformers
+import json
+from .schema import ActionInfo, EnvException, EnhancedJSONEncoder
 
 from .prompt2model.prompt_parser import MockPromptSpec, TaskType
 from .prompt2model.dataset_retriever import DescriptionDatasetRetriever
@@ -8,6 +11,8 @@ from .prompt2model.dataset_generator import PromptBasedDatasetGenerator, Dataset
 from .prompt2model.dataset_processor import TextualizeProcessor
 from .prompt2model.model_retriever import DescriptionModelRetriever
 from .prompt2model.model_trainer import GenerationModelTrainer
+from .prompt2model.model_executor import GenerationModelExecutor, ModelOutput
+from .prompt2model.model_evaluator import Seq2SeqEvaluator
 
 def generate_dataset(instruction, examples, save_dir, num_train, num_valid, num_test, work_dir = '.'):
     try:
@@ -79,6 +84,7 @@ def train_model(model_name, load_dirs, result_dir, epochs, batch_size, warmup_st
     except ValueError:
         raise EnvException("Numerical parameters should be integers or floats as appropriate")
 
+    load_dirs = load_dirs.split(':')
     result_dir = os.path.join(work_dir, result_dir)
 
     # load the datasets
@@ -86,7 +92,7 @@ def train_model(model_name, load_dirs, result_dir, epochs, batch_size, warmup_st
     dataset_dicts = [datasets.load_from_disk(load_path) for load_path in load_paths]
 
     training_datasets = [dataset_dict["train"] for dataset_dict in dataset_dicts]
-    validation_datasets = [dataset_dict["validation"] for dataset_dict in dataset_dicts]
+    validation_datasets = [dataset_dict["val"] for dataset_dict in dataset_dicts]
         
     trainer = GenerationModelTrainer(
         model_name,
@@ -117,6 +123,70 @@ def train_model(model_name, load_dirs, result_dir, epochs, batch_size, warmup_st
     trained_tokenizer.save_pretrained(os.path.join(result_dir, "trained_tokenizer"))
 
     return f"Model and Tokenizer successfully trained and saved respectively to {result_dir}/trained_model and {result_dir}/trained_tokenizer"
+
+def execute_model(result_dir, load_dirs, save_path, batch_size, input_column, work_dir = '.'):
+    load_dirs = load_dirs.split(':')
+    result_dir = os.path.join(work_dir, result_dir)
+    save_path = os.path.join(work_dir, save_path)
+
+    try:
+        batch_size = int(batch_size)
+    except ValueError:
+        raise EnvException("Batch size should be an integer")
+
+    # load the datasets
+    load_paths = [os.path.join(work_dir, load_dir) for load_dir in load_dirs]
+    dataset_dicts = [datasets.load_from_disk(load_path) for load_path in load_paths]
+    test_datasets = [dataset_dict["test"] for dataset_dict in dataset_dicts]
+    test_dataset = datasets.concatenate_datasets(test_datasets)
+
+    trained_model_path = os.path.join(result_dir, "trained_model")
+    trained_tokenizer_path = os.path.join(result_dir, "trained_tokenizer")
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    trained_model = transformers.AutoModelForSeq2SeqLM.from_pretrained(trained_model_path).to(device)
+    trained_tokenizer = transformers.AutoTokenizer.from_pretrained(trained_tokenizer_path)
+
+    executor = GenerationModelExecutor(
+        trained_model,
+        trained_tokenizer,
+        batch_size,
+        tokenizer_max_length=1024,
+        sequence_max_length=1280,
+    )
+
+    outputs = executor.make_prediction(
+        test_set=test_dataset,
+        input_column=input_column
+    )
+
+    with open(save_path, 'w') as f:
+        json.dump(outputs, f, cls=EnhancedJSONEncoder)
+
+    return f"Model successfully executed on the test sets of the specified datasets and saved to {save_path}"
+
+def evaluate_model(load_dirs, save_path, output_column, work_dir = '.'):
+    load_dirs = load_dirs.split(':')
+    # load the datasets
+    load_paths = [os.path.join(work_dir, load_dir) for load_dir in load_dirs]
+    dataset_dicts = [datasets.load_from_disk(load_path) for load_path in load_paths]
+    test_datasets = [dataset_dict["test"] for dataset_dict in dataset_dicts]
+    test_dataset = datasets.concatenate_datasets(test_datasets)
+
+    save_path = os.path.join(work_dir, save_path)
+    with open(save_path, 'r') as f:
+        outputs = json.load(f)
+    outputs = [ModelOutput(**output) for output in outputs]
+
+    evaluator = Seq2SeqEvaluator()
+    metric_values = evaluator.evaluate_model(
+        test_dataset,
+        gt_column=output_column,
+        predictions=outputs,
+        encoder_model_name="xlm-roberta-base",
+    )
+
+    return f"Evaluation metrics: {metric_values}"
 
 P2M_ACTIONS = [
     ActionInfo(
@@ -157,7 +227,7 @@ P2M_ACTIONS = [
     ),
     ActionInfo(
         name="Process Dataset",
-        description="Process dataset based on a detailed description of the requirements. You can load the processed data later from `save_dirs` using the load_from_disk function of the HuggingFace datasets library.",
+        description="Process dataset based on a detailed description of the requirements. You can load the processed data later from `save_dirs` using the load_from_disk function of the HuggingFace datasets library. The input text will be in the `model_input` column and the output text will be in the `model_output` column.",
         usage={
             "instruction": "an instruction on how to generate the output from the input",
             "load_dirs": "directories to load the dataset dicts from, separated by colons",
@@ -184,5 +254,30 @@ P2M_ACTIONS = [
         is_primitive=False,
         function=train_model
     ),
-    ActionInfo("Execute Model", )
+    ActionInfo(
+        name="Execute Model on Test Set",
+        description="Execute a trained model on the test sets of specified dataset dicts.",
+        usage={
+            "result_dir": "directory where the trained model and tokenizer are saved",
+            "load_dirs": "directories to load the dataset dicts from, separated by colons",
+            "save_path": "file to save the results of the model execution in json format",
+            "batch_size": "batch size for executing the model",
+            "input_column": "column name of the input text",
+        },
+        return_value="The observation will be a success message if the model was executed successfully. Otherwise, an error message will be returned.",
+        is_primitive=False,
+        function=execute_model,
+    ),
+    ActionInfo(
+        name="Evaluate Model",
+        description="Evaluate a trained model on the test sets of specified dataset dicts.",
+        usage={
+            "load_dirs": "directories to load the dataset dicts from, separated by colons",
+            "save_path": "file to load the results of the model execution in json format",
+            "output_column": "column name of the output text",
+        },
+        return_value="The values for various evaluation metrics will be returned.",
+        is_primitive=False,
+        function=evaluate_model,
+    )
 ]
