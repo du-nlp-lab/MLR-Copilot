@@ -37,7 +37,7 @@ class Environment:
         self._work_dir = args.work_dir
         self._read_only_files = []
 
-        self._initialize_interactive_env() # set up work dir and log dir
+        self._initialize_env() # set up work dir and log dir
 
         self._action_infos =  {t.name: t for t in LOW_LEVEL_ACTIONS + HIGH_LEVEL_ACTIONS + P2M_ACTIONS}
 
@@ -111,51 +111,7 @@ class Environment:
         else:
             os.makedirs(os.path.join(self.log_dir, "traces"))
 
-    def _initialize_task_env(self):
-
-        work_dir = self.work_dir
-
-        # remove the workspace folder if it exists
-        if os.path.exists(work_dir):
-            shutil.rmtree(work_dir)
-
-        benchmark_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "benchmarks", self.benchmark_folder_name)
-
-        # prepare if there is a prepare.py and it has not been prepared
-        prepare_task(benchmark_dir, self.args.python)
-
-        # copy the benchmarks folder to work_dir
-        if os.path.exists(os.path.join(benchmark_dir, "env" )):
-            shutil.copytree(os.path.join(benchmark_dir, "env"), work_dir, symlinks=True)
-
-        # find all read only files
-        if os.path.exists(os.path.join(benchmark_dir, "scripts", "read_only_files.txt")):
-            ignore_files = open(os.path.join(benchmark_dir, "scripts", "read_only_files.txt"), "r").read().split("\n")
-            for path, subdirs, files in os.walk(os.path.join(work_dir)):
-
-                relpath = os.path.relpath(path, work_dir)
-                # filter out the files that are read only
-                filenames = [os.path.join(relpath, filename) for filename in files]
-                for ignore in ignore_files:
-                    ignore_filenames = [n for n in filenames if fnmatch.fnmatch(n, ignore)]
-                    self.read_only_files.extend(ignore_filenames)
-
-
-        # init backup folder and remove all content if it exists
-        if os.path.exists(os.path.join(work_dir, "backup")):
-            shutil.rmtree(os.path.join(work_dir, "backup"))
-        os.mkdir(os.path.join(work_dir, "backup"))
-
-        if self.args.resume:
-            shutil.rmtree(work_dir)
-            resume_dir = os.path.join(self.args.resume, "env_log", "traces" , f"step_{self.args.resume_step}_files")
-            print("Restoring workspace ing from {}".format(resume_dir))
-            shutil.copytree(resume_dir, work_dir, symlinks=True)
-            if not os.path.exists(os.path.join(work_dir, "backup")):
-                os.mkdir(os.path.join(work_dir, "backup"))
-
-
-    def _initialize_interactive_env(self):
+    def _initialize_env(self):
         os.makedirs(os.path.join(self.work_dir), exist_ok=True)
         # set up read only files
         can_modify_files = '*'
@@ -319,7 +275,7 @@ class Environment:
 
     def save(self, curr_step):
         """ Save the trace and snapshot of the workspace folder """     
-        print(f'Saving {curr_step}')
+        print(f'ENV: saving step {curr_step}')
         with open(os.path.join(self.log_dir, f"trace.json"), "w") as f:
             json.dump(self.trace, f, indent=4, cls=EnhancedJSONEncoder)
 

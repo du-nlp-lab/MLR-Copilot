@@ -8,29 +8,12 @@ from .agent import Agent
 
 from MLAgentBench.prompt2model.prompt_parser import TaskType, PromptBasedInstructionParser
 
-external_libs = [
-    "numpy",
-    "pandas",
-    "matplotlib",
-    "seaborn",
-    "torch",
-    "torchvision",
-    "tensorflow",
-    "keras",
-    "transformers",
-    "datasets",
-    "sklearn"
-]
-
 initial_prompt = """You are a helpful research assistant. You have access to the following tools:
 {tools_prompt}
 
 Research Problem: {task_description}
 
 You do not know anything about this problem so far. 
-
-You may only use Python and can only use the following external libraries in your code:
-{external_libs}
 
 Follow these instructions and do not forget them:
 - First, come up with a high level plan based on your understanding of the problem and available tools and record it in the Research Plan and Status. You can revise the plan later.
@@ -62,6 +45,8 @@ format_prompt_dict = {
     "Action Input": "the input to the action as a valid JSON string",
 }
 
+def indent_text(s, n):
+    return "\n".join(" "*n + line for line in s.split("\n"))
 
 class ResearchAgent(Agent):
     """This class implements AI research agent with different configurations."""
@@ -74,7 +59,7 @@ class ResearchAgent(Agent):
         self.prompt_spec = PromptBasedInstructionParser(TaskType.TEXT_GENERATION)
         self.prompt_spec.parse_from_prompt(env.research_problem)
         task_desc = f'Instruction: {self.prompt_spec.instruction}\nExamples: {self.prompt_spec.examples}'
-        self.initial_prompt = initial_prompt.format(tools_prompt=self.tools_prompt, tool_names=self.prompt_tool_names,  task_description=task_desc, format_prompt="\n".join([f"{k}: {format_prompt_dict[k]}" for k in self.valid_format_entires]), external_libs=", ".join(external_libs))
+        self.initial_prompt = initial_prompt.format(tools_prompt=self.tools_prompt, tool_names=self.prompt_tool_names,  task_description=task_desc, format_prompt="\n".join([f"{k}: {format_prompt_dict[k]}" for k in self.valid_format_entires]))
 
     def run(self, env):
         last_steps = self.args.max_steps_in_context
@@ -99,6 +84,8 @@ class ResearchAgent(Agent):
 
                     # retrieval action
                     relevant_history = env.execute(Action("Retrieval from Research Log", {"current_plan": ""}))
+
+                    print(f"Relevant History:\n{indent_text(relevant_history, 4)}")
 
                     prompt += f"""
         Here is a summary of relevant actions and observations you have done:
@@ -133,10 +120,12 @@ class ResearchAgent(Agent):
             for _ in range(self.args.max_retries):
                 log_file = os.path.join(self.log_dir , f"step_{curr_step}_log.log")
                 completion = complete_text(prompt, log_file, self.args.llm_name)
-
                 try:
                     entries = self.parse_entries(completion, self.valid_format_entires)
                     assert entries["Action"].strip() in self.all_tool_names
+                    print("Entries:")
+                    for k, v in entries.items():
+                        print(f"  {k}:\n{indent_text(v, 4)}")
                     valid_response = True
                 except:
                     print("Step", curr_step, file=sys.stderr)
@@ -191,7 +180,6 @@ class ResearchAgent(Agent):
 
                 observation = "ActionInputParsingError: "+ parsing_error + "\n" + invalid_action_error
 
-
             #######################################################
             #               update history_steps                  #
             #######################################################
@@ -203,7 +191,16 @@ class ResearchAgent(Agent):
                 print("Observation is too long. Summarizing...", file=sys.stderr)
                 observation = self.summarize_observation(self.print_action(entries, self.valid_format_entires), observation, log_file)
 
-            self.history_steps.append({"step_idx": len(env.trace.steps), "action": entries, "observation": observation})
+            print(f"Observation:\n{indent_text(observation, 4)}")
+
+            feedback = input("Please provide feedback based on the history, action and observation: ")
+
+            self.history_steps.append({
+                "step_idx": len(env.trace.steps),
+                "action": entries,
+                "observation": observation,
+                "feedback": feedback,
+            })
 
             ## filter out ActionInputParsingError if last step is not action input parsing error
             if not observation.startswith("ActionInputParsingError"):
@@ -221,7 +218,12 @@ class ResearchAgent(Agent):
                 for _ in range(self.args.max_retries):
                     try:
                         log_file = os.path.join(self.log_dir , f"step_{curr_step}_summary_log.log")
-                        summary_of_last_step = self.summarize_action_and_observation(self.print_action(self.history_steps[-1]["action"], self.valid_format_entires), self.history_steps[-1]["observation"], log_file = log_file)
+                        summary_of_last_step = self.summarize_log_entry(
+                            action=self.print_action(self.history_steps[-1]["action"], self.valid_format_entires),
+                            observation=self.history_steps[-1]["observation"],
+                            feedback=self.history_steps[-1]["feedback"],
+                            log_file = log_file
+                        )
                         break
                     except Exception as e:
                         print(e)
@@ -290,19 +292,24 @@ Do not include any result that is guessed rather than directly confirmed by the 
             return completion
 
     @staticmethod
-    def summarize_action_and_observation(action, observation, **kwargs):
+    def summarize_log_entry(action, observation, feedback, **kwargs):
         """ Summarize the action and observation to an entry in the research log """
 
-        prompt = f"""Given your action and the observation: 
-        {action} 
+        prompt = f"""Given your action, the observation, and the human feedback: 
+        [Action]:
+        {action}
         [Observation]:
         ```
         {observation}
         ```
+        [Feedback]:
+        {feedback}
+        
         Summarize your action and the observation in this format:
         [Reasoning]: Summarize the reasoning behind the action
         [Action]: Summarize all relevant details of the action objectively
         [Observation]: Summarize all relevant details in the observation objectively
+        [Feedback]: Summarize all relevant details in the human feedback objectively
         Do not include any result that is guessed rather than directly confirmed by the observation. Do not include additional information or suggestions.
         """
 

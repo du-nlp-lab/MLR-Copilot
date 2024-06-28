@@ -44,7 +44,7 @@ class Agent:
         self.action_infos = env.action_infos
         tool_names = list(env.action_infos.keys())
         self.all_tool_names = copy.deepcopy(tool_names)
-        actions_remove_from_prompt = ["Read File", "Write File", "Append File", "Retrieval from Research Log", "Append Summary to Research Log", "Python REPL", "Edit Script Segment (AI)"]
+        actions_remove_from_prompt = ["Read File", "Write File", "Append File", "Retrieval from Research Log", "Append Summary to Research Log", "Python REPL", "Edit Script Segment (AI)", "Request Help"]
         actions_remove_from_prompt.extend(args.actions_remove_from_prompt)
         for t in actions_remove_from_prompt:
             # remove tool name but in case of missing tool name, don't crash
