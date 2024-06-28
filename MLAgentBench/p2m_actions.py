@@ -14,7 +14,7 @@ from .prompt2model.model_trainer import GenerationModelTrainer
 from .prompt2model.model_executor import GenerationModelExecutor, ModelOutput
 from .prompt2model.model_evaluator import Seq2SeqEvaluator
 
-def generate_dataset(instruction, examples, save_dir, num_train, num_valid, num_test, work_dir = '.'):
+def generate_dataset(instruction, examples, save_dir, num_train, num_valid, num_test, work_dir = '.', **kwargs):
     try:
         num_train = int(num_train)
         num_valid = int(num_valid)
@@ -35,7 +35,7 @@ def generate_dataset(instruction, examples, save_dir, num_train, num_valid, num_
 
     return f"Dataset successfully generated and saved to {save_path}"
 
-def retrieve_dataset(instruction, save_dir, work_dir = '.'):
+def retrieve_dataset(instruction, save_dir, work_dir = '.', **kwargs):
     prompt_spec = MockPromptSpec(TaskType.TEXT_GENERATION, instruction=instruction, examples="")
     retriever = DescriptionDatasetRetriever()
     dataset_dict = retriever.retrieve_dataset_dict(prompt_spec)
@@ -45,14 +45,14 @@ def retrieve_dataset(instruction, save_dir, work_dir = '.'):
 
     return f"Dataset successfully generated and saved to {save_path}"
 
-def retrieve_model(instruction, work_dir = '.'):
+def retrieve_model(instruction, work_dir = '.', **kwargs):
     prompt_spec = MockPromptSpec(TaskType.TEXT_GENERATION, instruction=instruction, examples="")
     retriever = DescriptionModelRetriever(use_bm25=True, use_HyDE=True)
     top_models = retriever.retrieve(prompt_spec)
 
     return "Top Models:\n" + "".join(f"{i+1}. {model}\n" for i, model in enumerate(top_models))
 
-def process_dataset(instruction, load_dirs, save_dirs, work_dir = '.'):
+def process_dataset(instruction, load_dirs, save_dirs, work_dir = '.', **kwargs):
     prompt_spec = MockPromptSpec(TaskType.TEXT_GENERATION, instruction=instruction, examples="")
     load_dirs = load_dirs.split(':')
     save_dirs = save_dirs.split(':')
@@ -74,7 +74,7 @@ def process_dataset(instruction, load_dirs, save_dirs, work_dir = '.'):
 
     return f"Data successfully processed and saved to {save_paths}"
 
-def train_model(model_name, load_dirs, result_dir, epochs, batch_size, warmup_steps, weight_decay, learning_rate, work_dir = '.'):
+def train_model(model_name, load_dirs, result_dir, epochs, batch_size, warmup_steps, weight_decay, learning_rate, work_dir = '.', **kwargs):
     try:
         epochs = int(epochs)
         batch_size = int(batch_size)
@@ -124,7 +124,7 @@ def train_model(model_name, load_dirs, result_dir, epochs, batch_size, warmup_st
 
     return f"Model and Tokenizer successfully trained and saved respectively to {result_dir}/trained_model and {result_dir}/trained_tokenizer"
 
-def execute_model(result_dir, load_dirs, save_path, batch_size, input_column, work_dir = '.'):
+def execute_model(result_dir, load_dirs, save_path, batch_size, input_column, work_dir = '.', **kwargs):
     load_dirs = load_dirs.split(':')
     result_dir = os.path.join(work_dir, result_dir)
     save_path = os.path.join(work_dir, save_path)
@@ -165,7 +165,7 @@ def execute_model(result_dir, load_dirs, save_path, batch_size, input_column, wo
 
     return f"Model successfully executed on the test sets of the specified datasets and saved to {save_path}"
 
-def evaluate_model(load_dirs, save_path, output_column, work_dir = '.'):
+def evaluate_model(load_dirs, save_path, output_column, work_dir = '.', **kwargs):
     load_dirs = load_dirs.split(':')
     # load the datasets
     load_paths = [os.path.join(work_dir, load_dir) for load_dir in load_dirs]
