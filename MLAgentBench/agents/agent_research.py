@@ -4,6 +4,7 @@ import sys
 import anthropic
 from MLAgentBench.LLM import complete_text_fast, complete_text
 from MLAgentBench.schema import Action
+from MLAgentBench.users.console_user import ConsoleUser
 from .agent import Agent
 
 from MLAgentBench.prompt2model.prompt_parser import TaskType, PromptBasedInstructionParser
@@ -45,9 +46,6 @@ format_prompt_dict = {
     "Action Input": "the input to the action as a valid JSON string",
 }
 
-def indent_text(s, n):
-    return "\n".join(" "*n + line for line in s.split("\n"))
-
 class ResearchAgent(Agent):
     """This class implements AI research agent with different configurations."""
 
@@ -56,6 +54,7 @@ class ResearchAgent(Agent):
         self.valid_format_entires = ["Reflection",  "Research Plan and Status","Fact Check", "Thought","Action", "Action Input"] # use all entries by default
         if args.valid_format_entires:
             self.valid_format_entires = args.valid_format_entires
+        self.user = ConsoleUser()
         self.prompt_spec = PromptBasedInstructionParser(TaskType.TEXT_GENERATION)
         self.prompt_spec.parse_from_prompt(env.research_problem)
         task_desc = f'Instruction: {self.prompt_spec.instruction}\nExamples: {self.prompt_spec.examples}'
@@ -85,7 +84,6 @@ class ResearchAgent(Agent):
                     # retrieval action
                     relevant_history = env.execute(Action("Retrieval from Research Log", {"current_plan": ""}))
 
-                    print(f"Relevant History:\n{indent_text(relevant_history, 4)}")
 
                     prompt += f"""
         Here is a summary of relevant actions and observations you have done:
@@ -123,9 +121,6 @@ class ResearchAgent(Agent):
                 try:
                     entries = self.parse_entries(completion, self.valid_format_entires)
                     assert entries["Action"].strip() in self.all_tool_names
-                    print("Entries:")
-                    for k, v in entries.items():
-                        print(f"  {k}:\n{indent_text(v, 4)}")
                     valid_response = True
                 except:
                     print("Step", curr_step, file=sys.stderr)
@@ -191,9 +186,8 @@ class ResearchAgent(Agent):
                 print("Observation is too long. Summarizing...", file=sys.stderr)
                 observation = self.summarize_observation(self.print_action(entries, self.valid_format_entires), observation, log_file)
 
-            print(f"Observation:\n{indent_text(observation, 4)}")
 
-            feedback = input("Please provide feedback based on the history, action and observation: ")
+            feedback = self.user.interact(relevant_history, entries, observation)
 
             self.history_steps.append({
                 "step_idx": len(env.trace.steps),
