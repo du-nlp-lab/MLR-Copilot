@@ -288,9 +288,6 @@ class Environment:
 
     ############## for logging convenience ##############
 
-    def get_task_description(self):
-        return self.research_problem, ""
-
     @property
     def low_level_actions(self):
         return list(filter(lambda x: x.is_primitive, self.action_infos.values()))

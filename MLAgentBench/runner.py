@@ -10,25 +10,17 @@ from MLAgentBench import LLM
 from MLAgentBench.environment import Environment
 from MLAgentBench.agents.agent import Agent, SimpleActionAgent, ReasoningActionAgent
 from MLAgentBench.agents.agent_research import ResearchAgent
-# from MLAgentBench.agents.agent_langchain  import LangChainAgent
-# try:
-#     from MLAgentBench.agents.agent_autogpt  import AutoGPTAgent
-# except:
-#     print("Failed to import AutoGPTAgent; Make sure you have installed the autogpt dependencies if you want to use it.")
-
 
 def run(agent_cls, args):
     with Environment(args) as env:
 
         print("=====================================")
-        research_problem, benchmark_folder_name = env.get_task_description()
-        print("Benchmark folder name: ", benchmark_folder_name)
+        research_problem = env.research_problem
         print("Research problem: ", research_problem)
-        print("Lower level actions enabled: ", [action.name for action in env.low_level_actions])
-        print("High level actions enabled: ", [action.name for action in env.high_level_actions])
 
         agent = agent_cls(args, env)
         final_message = agent.run(env)
+
         print("=====================================")
         print("Final message: ", final_message)
 
