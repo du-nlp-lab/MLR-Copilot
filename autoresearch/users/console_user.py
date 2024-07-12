@@ -1,4 +1,4 @@
-from autoresearch.users import User
+from autoresearch.users.user import User
 
 class ConsoleUser(User):
     @staticmethod

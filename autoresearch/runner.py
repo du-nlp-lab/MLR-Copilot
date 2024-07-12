@@ -58,7 +58,7 @@ if __name__ == "__main__":
     parser.add_argument("--max-retries", type=int, default=5, help="max retries")
 
     args = parser.parse_args()
-    print(args, file=sys.stderr)
+    print(vars(args), file=sys.stderr)
     if not args.retrieval or args.agent_type != "ResearchAgent":
         # should not use these actions when there is no retrieval
         args.actions_remove_from_prompt.extend(["Retrieval from Research Log", "Append Summary to Research Log", "Reflection"])
