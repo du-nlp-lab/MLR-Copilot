@@ -45,3 +45,4 @@ retriv
 tiktoken
 aiolimiter
 litellm
+nest_asyncio
