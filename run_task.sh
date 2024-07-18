@@ -1,4 +1,4 @@
 #!/bin/bash
 task=$1
 
-python -u -m autoresearch.runner --research-problem MLAgentBench/benchmarks/$1/scripts/research_problem.txt --work-dir MLAgentBench/benchmarks/$1/env --log-dir logs/$1 --retrieval
+python -u -m reactagent.runner --research-problem MLAgentBench/benchmarks/$1/scripts/research_problem.txt --work-dir MLAgentBench/benchmarks/$1/env --log-dir logs/$1 --retrieval

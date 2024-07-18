@@ -1,0 +1,47 @@
+# images
+pillow
+
+# common ml packages
+# torch>=2.0.0
+# torchvision
+transformers
+scikit-learn
+xgboost
+keras
+scipy
+numpy
+pandas
+matplotlib
+seaborn
+tqdm
+kaggle
+
+# llm
+openai
+anthropic
+sentencepiece
+peft
+accelerate
+evaluate
+
+# graph
+torch-geometric==2.3.1
+ogb
+
+
+#others
+nest_asyncio
+dacite
+python-dotenv
+
+# for p2m specifically
+datasets
+fastapi
+gradio==3.38.0
+bert_score
+tevatron
+mdtex2html
+retriv
+tiktoken
+aiolimiter
+litellm

@@ -9,8 +9,12 @@ USER root
 RUN apt update && apt install -y gcc-10 g++-10 && ln /usr/bin/gcc-10 /usr/bin/gcc && ln /usr/bin/g++-10 /usr/bin/g++ && apt install -y zlib1g-dev && rm -r /var/lib/apt/lists/*
 USER user
 
+# setup llama
+COPY codellama .
+COPY ReactAgent .
+
 # Add the current directory contents into the container at /app
-COPY install.sh .
+COPY AutoResearch/install.sh .
 COPY requirements.txt .
 
 # Install libraries 
