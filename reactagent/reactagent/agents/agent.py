@@ -10,7 +10,7 @@ from argparse import Namespace
 import anthropic
 import reactagent.high_level_actions as high_level_actions
 from reactagent.schema import Action, EnhancedJSONEncoder
-from reactagent.LLM import complete_text
+from reactagent.reactagent.llm import complete_text
 
 initial_prompt = """You are a helpful research assistant. You have access to the following tools:
 {tools_prompt}
@@ -264,8 +264,7 @@ class SimpleActionAgent(Agent):
             entries = None
             valid_response = False
             for _ in range(self.args.max_retries):
-                log_file = os.path.join(self.log_dir , f"step_{curr_step}_log.log")
-                completion = complete_text(prompt, log_file, self.args.llm_name)
+                completion = complete_text(prompt, self.args.llm_name)
 
                 try:
                     entries = self.parse_entries(completion, self.valid_format_entires)

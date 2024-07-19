@@ -2,7 +2,7 @@
 import os
 import sys
 import anthropic
-from reactagent.LLM import complete_text_fast, complete_text
+from reactagent.reactagent.llm import complete_text_fast, complete_text
 from reactagent.schema import Action
 from reactagent.users.console_user import ConsoleUser
 from .agent import Agent
@@ -117,7 +117,7 @@ class ResearchAgent(Agent):
             valid_response = False
             for _ in range(self.args.max_retries):
                 log_file = os.path.join(self.log_dir , f"step_{curr_step}_log.log")
-                completion = complete_text(prompt, log_file, self.args.llm_name)
+                completion = complete_text(prompt, self.args.llm_name)
                 try:
                     entries = self.parse_entries(completion, self.valid_format_entires)
                     assert entries["Action"].strip() in self.all_tool_names
@@ -260,7 +260,7 @@ Summarize the observation concisely in this format:
 Do not include any result that is guessed rather than directly confirmed by the observation. Do not include additional information or suggestions.
 """
 
-            completion = complete_text_fast(prompt, log_file=log_file +f"_{idx}")
+            completion = complete_text_fast(prompt)
             descriptions.append(completion)
         if len(descriptions) == 1:
             completion = descriptions[0]
@@ -279,7 +279,7 @@ Summarize the observation concisely in this format:
 Do not include any result that is guessed rather than directly confirmed by the observation. Do not include additional information or suggestions.
 """
 
-            completion = complete_text_fast(prompt, log_file=log_file)
+            completion = complete_text_fast(prompt)
         try:
             return completion.split("[Observation]:")[1]
         except:
@@ -307,6 +307,6 @@ Do not include any result that is guessed rather than directly confirmed by the 
         Do not include any result that is guessed rather than directly confirmed by the observation. Do not include additional information or suggestions.
         """
 
-        summary = "[Reasoning]:" + complete_text_fast(prompt, log_file=kwargs["log_file"]).split("[Reasoning]:")[1]
+        summary = "[Reasoning]:" + complete_text_fast(prompt).split("[Reasoning]:")[1]
         return summary
     

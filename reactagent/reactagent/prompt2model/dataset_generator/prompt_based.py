@@ -14,16 +14,13 @@ import openai
 from datasets import Dataset
 from tqdm import tqdm
 
+from reactagent.llm import complete_multi_text, FAST_MODEL
 from reactagent.prompt2model.dataset_generator.base import DatasetGenerator, DatasetSplit
 from reactagent.prompt2model.dataset_generator.prompt_template import construct_meta_prompt
 from reactagent.prompt2model.prompt_parser import PromptSpec
 from reactagent.prompt2model.utils import (
-    API_ERRORS,
-    APIAgent,
-    api_tools,
     count_tokens_from_string,
     get_formatted_logger,
-    handle_api_error,
 )
 
 nest_asyncio.apply()
@@ -344,13 +341,12 @@ class PromptBasedDatasetGenerator(DatasetGenerator):
                 )
                 continue
 
-    async def generate_responses(
+    def generate_responses(
         self,
-        chat_api: APIAgent,
         generated_dataset_size: int,
         expected_num_examples: int,
         prompts: list[str],
-    ) -> list[openai.Completion]:
+    ) -> list[str]:
         """Asynchronously generates responses using the GPT-3.5 API.
 
         Args:
@@ -382,11 +378,11 @@ class PromptBasedDatasetGenerator(DatasetGenerator):
 
         # Ensure the dynamic temperature is within the range [0, 2.0]
         clipped_temperature = max(0.0, min(2.0, dynamic_temperature))
-        responses = await chat_api.generate_batch_completion(
+        responses = complete_multi_text(
             prompts,
+            model=FAST_MODEL,
             temperature=clipped_temperature,
-            responses_per_request=self.responses_per_request,
-            requests_per_minute=self.requests_per_minute,
+            responses_per_request=self.responses_per_request
         )
         return responses
 
@@ -416,13 +412,8 @@ class PromptBasedDatasetGenerator(DatasetGenerator):
         generated_examples: list[Example] = []
 
         pbar = tqdm(total=num_examples, desc="Generating examples")
-        chat_api = api_tools.default_api_agent
 
         while len(generated_examples) < num_examples:
-            if self.max_api_calls and self.api_call_counter >= self.max_api_calls:
-                logger.warning("Maximum number of API calls reached.")
-                break
-
             batch_size = self.compute_batch_size(num_examples, len(generated_examples))
             self.api_call_counter += batch_size
 
@@ -436,18 +427,11 @@ class PromptBasedDatasetGenerator(DatasetGenerator):
                 for _ in range(batch_size)
             ]
 
-            try:
-                loop = asyncio.get_event_loop()
-                responses = loop.run_until_complete(
-                    self.generate_responses(
-                        chat_api=chat_api,
-                        generated_dataset_size=len(generated_examples),
-                        expected_num_examples=num_examples,
-                        prompts=prompts,
-                    )
-                )
-            except API_ERRORS as e:
-                handle_api_error(e)
+            responses = self.generate_responses(
+                generated_dataset_size=len(generated_examples),
+                expected_num_examples=num_examples,
+                prompts=prompts,
+            )
 
             # Extract the responses and add new examples to the dataset.
             prev_length = len(generated_examples)

@@ -16,11 +16,9 @@ from reactagent.prompt2model.dataset_transformer.prompt_template import (
 )
 from reactagent.prompt2model.prompt_parser import PromptSpec
 from reactagent.prompt2model.utils import (
-    API_ERRORS,
-    api_tools,
     get_formatted_logger,
-    handle_api_error,
 )
+from reactagent.llm import complete_multi_text
 from reactagent.prompt2model.utils.parse_responses import (
     find_and_parse_json,
     make_single_api_request,
@@ -68,9 +66,7 @@ class PromptBasedDatasetTransformer(DatasetTransformer):
         task_explanation_prompt = construct_prompt_for_task_explanation(
             prompt_spec.instruction, prompt_spec.examples
         )
-        return make_single_api_request(
-            task_explanation_prompt, max_api_calls=self.num_retries
-        )
+        return make_single_api_request(task_explanation_prompt)
 
     def generate_plan(
         self, task_explanation: str, dataset: datasets.Dataset, prompt_spec: PromptSpec
@@ -79,7 +75,7 @@ class PromptBasedDatasetTransformer(DatasetTransformer):
         plan_prompt = self.plan_prompt_fn(
             task_explanation, prompt_spec.examples, dataset
         )
-        return make_single_api_request(plan_prompt, max_api_calls=self.num_retries)
+        return make_single_api_request(plan_prompt)
 
     def generate_transform_prompts(
         self,
@@ -98,56 +94,18 @@ class PromptBasedDatasetTransformer(DatasetTransformer):
         return transform_prompts
 
     def generate_responses(
-        self, transform_prompts_batch: list[str], model_name="gpt-3.5-turbo"
+        self, transform_prompts_batch: list[str]
     ) -> list[str]:
         """Generate responses for the given transform prompts.
 
         Args:
             transform_prompts_batch: A list of transform prompts.
-            model_name: The name of the model to use. Defaults to
-                    "gpt-3.5-turbo" to save costs.
 
         Returns:
             A list of generated responses.
 
-        Raises:
-            API_ERRORS: If there is an error with the API.
-
         """
-        api_call_counter = 0
-        last_error = None
-        responses = []
-        while True:
-            api_call_counter += 1
-
-            async def generate_responses_async(transform_prompts):
-                """Generate responses asynchronously using the specified model."""
-                responses = await api_tools.APIAgent(
-                    model_name=model_name
-                ).generate_batch_completion(
-                    transform_prompts,
-                    temperature=0,
-                    responses_per_request=1,
-                    requests_per_minute=15,
-                )
-                return responses
-
-            try:
-                loop = asyncio.get_event_loop()
-                responses = loop.run_until_complete(
-                    generate_responses_async(transform_prompts_batch)
-                )
-                break
-            except API_ERRORS as e:
-                last_error = e
-                handle_api_error(e)
-            if api_call_counter > self.num_retries:
-                # In case we reach maximum number of API calls, we raise an error.
-                logger.error("Maximum number of API calls reached.")
-                raise RuntimeError(
-                    "Maximum number of API calls reached."
-                ) from last_error
-
+        responses = complete_multi_text(transform_prompts_batch, temperature=0)
         return responses
 
     def process_responses(

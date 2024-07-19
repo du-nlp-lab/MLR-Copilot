@@ -5,16 +5,14 @@ import json
 import re
 from typing import Any
 
-import openai
-
-from reactagent.prompt2model.utils import api_tools, get_formatted_logger
-from reactagent.prompt2model.utils.api_tools import API_ERRORS, handle_api_error
+from reactagent.llm import complete_text_fast
+from reactagent.prompt2model.utils import get_formatted_logger
 
 logger = get_formatted_logger("ParseJsonResponses")
 
 
 def find_and_parse_json(
-    response: openai.Completion, required_keys: list, optional_keys: list = []
+    response: str, required_keys: list, optional_keys: list = []
 ) -> dict | None:
     """Parse stuctured fields from the API response.
 
@@ -31,8 +29,6 @@ def find_and_parse_json(
         final response as a Dictionary
         Else returns None.
     """
-    if not isinstance(response, str) and hasattr(response, "choices"):
-        response = response.choices[0]["message"]["content"]
     correct_json = find_rightmost_brackets(response)
 
     if correct_json is None:
@@ -76,7 +72,7 @@ def find_rightmost_brackets(text: str) -> str | None:
     return None
 
 
-def parse_dataset_config_responses(response: openai.ChatCompletion) -> dict:
+def parse_dataset_config_responses(response: str) -> dict:
     """Parse the response to extract relevant information from dataset/configuration.
 
     LLMs can return the dataset configuration in different formats -
@@ -88,10 +84,7 @@ def parse_dataset_config_responses(response: openai.ChatCompletion) -> dict:
     Returns:
         The extracted relevant information from the dataset configuration.
     """
-    if not isinstance(response, str) and hasattr(response, "choices"):
-        response_str = response.choices[0]["message"]["content"]
-    else:
-        response_str = response
+    response_str = response
 
     pattern = r"\*\*(.*?)\*\*"
 
@@ -108,7 +101,7 @@ def parse_prompt_to_fields(
     prompt: str,
     required_keys: list = [],
     optional_keys: list = [],
-    max_api_calls: int = 5,
+    max_api_calls=None,
     module_name: str = "col_selection",
 ) -> dict[str, Any]:
     """Parse prompt into specific fields, and return to the calling function.
@@ -121,8 +114,6 @@ def parse_prompt_to_fields(
         prompt: User prompt into specific fields
         required_keys: Fields that need to be present in the response
         optional_keys: Field that may/may not be present in the response
-        max_api_calls: Max number of retries, defaults to 5 to avoid
-                        being stuck in an infinite loop
         module_name: The module this is to be used for. Currently supports
                         rerank and col_selection
 
@@ -134,73 +125,27 @@ def parse_prompt_to_fields(
         RuntimeError: If the maximum number of API calls is reached.
 
     """
-    chat_api = api_tools.default_api_agent
-    if max_api_calls <= 0:
-        raise ValueError("max_api_calls must be > 0.")
 
-    api_call_counter = 0
-    last_error = None
-    while True:
-        api_call_counter += 1
-        try:
-            response: openai.ChatCompletion | Exception = (
-                chat_api.generate_one_completion(
-                    prompt,
-                    temperature=0.01,
-                    presence_penalty=0,
-                    frequency_penalty=0,
-                )
-            )
-            extraction: dict[str, Any] | None = None
-            if module_name == "col_selection":
-                extraction = find_and_parse_json(response, required_keys, optional_keys)
-
-            elif module_name == "rerank":
-                extraction = parse_dataset_config_responses(response)
-            if extraction is not None:
-                return extraction
-        except API_ERRORS as e:
-            last_error = e
-            handle_api_error(e, backoff_duration=2**api_call_counter)
-
-        if api_call_counter >= max_api_calls:
-            # In case we reach maximum number of API calls, we raise an error.
-            logger.error("Maximum number of API calls reached.")
-            raise RuntimeError("Maximum number of API calls reached.") from last_error
+    response = complete_text_fast(prompt, temperature=0.01)
+    extraction: dict[str, Any] | None = None
+    if module_name == "col_selection":
+        extraction = find_and_parse_json(response, required_keys, optional_keys)
+    elif module_name == "rerank":
+        extraction = parse_dataset_config_responses(response)
+    if extraction is not None:
+        return extraction
 
 
-def make_single_api_request(prompt: str, max_api_calls: int = 10) -> str:
+def make_single_api_request(prompt: str) -> str:
     """Prompts an LLM using the APIAgent, and returns the response.
 
     This function calls the required api, has the logic for retrying,
     returns the response back or throws an error
     Args:
         prompt: User prompt into specific fields
-        max_api_calls: Max number of retries, defaults to 5 to avoid
-                        being stuck in an infinite loop
     Returns:
         Response text or throws error
     """
-    chat_api = api_tools.default_api_agent
-    if max_api_calls <= 0:
-        raise ValueError("max_api_calls must be > 0.")
 
-    api_call_counter = 0
-    last_error = None
-    while True:
-        api_call_counter += 1
-        try:
-            response: openai.ChatCompletion = chat_api.generate_one_completion(
-                prompt=prompt, temperature=0.01, presence_penalty=0, frequency_penalty=0
-            )
-            if response is not None:
-                return response.choices[0]["message"]["content"]
-
-        except API_ERRORS as e:
-            last_error = e
-            handle_api_error(e, backoff_duration=2**api_call_counter)
-
-        if api_call_counter >= max_api_calls:
-            # In case we reach maximum number of API calls, we raise an error.
-            logger.error("Maximum number of API calls reached.")
-            raise RuntimeError("Maximum number of API calls reached.") from last_error
+    response = complete_text_fast(prompt, temperature=0.01)
+    return response

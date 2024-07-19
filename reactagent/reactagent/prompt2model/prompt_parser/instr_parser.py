@@ -50,7 +50,6 @@ class PromptBasedInstructionParser(PromptSpec):
         extraction = parse_prompt_to_fields(
             parsing_prompt_for_chatgpt,
             required_keys,
-            max_api_calls=self.max_api_calls,
         )
         self._instruction = extraction["Instruction"]
         self._examples = extraction["Demonstrations"]

@@ -6,7 +6,7 @@ import shutil
 import difflib
 from .low_level_actions import read_file, write_file, append_file
 from .schema import ActionInfo, EnvException
-from .LLM import complete_text_fast, complete_text
+from .llm import complete_text_fast, complete_text
 
 
 def reflection( things_to_reflect_on, work_dir = ".", research_problem = "", **kwargs):
@@ -21,7 +21,7 @@ def reflection( things_to_reflect_on, work_dir = ".", research_problem = "", **k
     Reflect on this: {things_to_reflect_on} 
     Give an answer in natural language paragraphs as truthfully as possible. 
     """
-    reflection = complete_text_fast(prompt, log_file=kwargs["log_file"])
+    reflection = complete_text_fast(prompt)
     return f"Reflection: {reflection}\n"
 
 
@@ -59,7 +59,7 @@ def understand_file( file_name, things_to_look_for, work_dir = ".", **kwargs):
     The description should short and also reference crtical lines in the script relevant to what is being looked for. Only describe what is objectively confirmed by the file content. Do not include guessed numbers. If you cannot find the answer to certain parts of the request, you should say "In this segment, I cannot find ...".
     """
 
-        completion = complete_text_fast(prompt, log_file=kwargs["log_file"]+f"_{idx}")
+        completion = complete_text_fast(prompt)
         descriptions.append(completion)
     if len(descriptions) == 1:
         return descriptions[0]
@@ -69,7 +69,7 @@ def understand_file( file_name, things_to_look_for, work_dir = ".", **kwargs):
     {descriptions}
     """
 
-        completion = complete_text_fast(prompt, log_file=kwargs["log_file"])
+        completion = complete_text_fast(prompt)
 
         return completion
 
@@ -93,7 +93,7 @@ def edit_script(script_name, edit_instruction, save_name, work_dir = ".", **kwar
 
     """
 
-    completion = complete_text(prompt, log_file=kwargs["log_file"], model=EDIT_SCRIPT_MODEL, max_tokens_to_sample=EDIT_SCRIPT_MAX_TOKENS)
+    completion = complete_text(prompt, model=EDIT_SCRIPT_MODEL, max_tokens_to_sample=EDIT_SCRIPT_MAX_TOKENS)
 
     new_content = completion.split("```python")[1].split("```")[0].strip()
 
@@ -139,7 +139,7 @@ def edit_script_lines( script_name, start_line_number, end_line_number,edit_inst
 
     """
 
-    completion = complete_text(prompt, log_file=kwargs["log_file"], model=EDIT_SCRIPT_MODEL, max_tokens_to_sample=EDIT_SCRIPT_MAX_TOKENS)
+    completion = complete_text(prompt, model=EDIT_SCRIPT_MODEL, max_tokens_to_sample=EDIT_SCRIPT_MAX_TOKENS)
 
     new_content = "\n".join(lines[:int(start_line_number)-1]) + "\n" + completion.split("```python")[1].split("```")[0].strip() + "\n" + "\n".join(lines[int(end_line_number):])
 
@@ -190,7 +190,7 @@ Your current research log:
 Concisely summarize and list all relevant information from the research log that will be helpful for future step in this format:
 """
 
-    retrieval = complete_text_fast(prompt, log_file=kwargs["log_file"])
+    retrieval = complete_text_fast(prompt)
 
     return retrieval
 
