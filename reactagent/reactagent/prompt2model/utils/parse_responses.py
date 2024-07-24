@@ -1,4 +1,4 @@
-"""Utility file for parsing OpenAI json responses."""
+"""Utility file for parsing json responses."""
 from __future__ import annotations
 
 import json

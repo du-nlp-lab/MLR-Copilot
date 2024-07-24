@@ -4,8 +4,8 @@ import sys
 import anthropic
 from reactagent.reactagent.llm import complete_text_fast, complete_text
 from reactagent.schema import Action
-from reactagent.users.console_user import ConsoleUser
 from .agent import Agent
+from .format import format_prompt_dict
 
 from reactagent.prompt2model.prompt_parser import TaskType, PromptBasedInstructionParser
 
@@ -36,82 +36,60 @@ the result of the action
 
 """
 
-
-format_prompt_dict = {
-    "Reflection": "What does the observation mean? If there is an error, what caused the error and how to debug?",
-    "Research Plan and Status": "The full high level research plan, with current status and confirmed results of each step briefly annotated. It must only include progress that has been made by previous steps. If there is any update, enclose the new update text in double asterisks **like this**. If there is no update, just copy the previous step Research Plan and Status. The high level plan from the previous step should be fully retained, unless it is intentionally revised.",
-    "Fact Check": "List all objective statements in the updates to Research Plan and Status one by one and point out whether it is guessed versus directly confirmed by the previous observation directly above. Performance numbers can only be confirmed by running the code and observing the output.",
-    "Thought": "What you are currently doing, what actions to perform and why",
-    "Action": "the action to take, should be one of the names of the tools",
-    "Action Input": "the input to the action as a valid JSON string",
-}
-
 class ResearchAgent(Agent):
     """This class implements AI research agent with different configurations."""
 
     def __init__(self, args, env):
         super().__init__(args, env)
-        self.valid_format_entires = ["Reflection",  "Research Plan and Status","Fact Check", "Thought","Action", "Action Input"] # use all entries by default
+        self.valid_format_entires = format_prompt_dict.keys() # use all entries by default
         if args.valid_format_entires:
             self.valid_format_entires = args.valid_format_entires
-        self.user = ConsoleUser()
         self.prompt_spec = PromptBasedInstructionParser(TaskType.TEXT_GENERATION)
         self.prompt_spec.parse_from_prompt(env.research_problem)
         task_desc = f'Instruction: {self.prompt_spec.instruction}\nExamples: {self.prompt_spec.examples}'
         self.initial_prompt = initial_prompt.format(tools_prompt=self.tools_prompt, tool_names=self.prompt_tool_names,  task_description=task_desc, format_prompt="\n".join([f"{k}: {format_prompt_dict[k]}" for k in self.valid_format_entires]))
 
-    def run(self, env):
-        last_steps = self.args.max_steps_in_context
-        last_observation_step = self.args.max_observation_steps_in_context
-
         with open(os.path.join(self.log_dir , "main_log"), "a", 1) as f:
             f.write(self.initial_prompt + "\n")
 
-        while not env.is_final() and len(self.history_steps) < self.args.agent_max_steps:
-
+    def run(self, env):
+        while env.is_final() or len(self.history_steps) >= self.args.agent_max_steps:
+            last_steps = self.args.max_steps_in_context
+            last_observation_step = self.args.max_observation_steps_in_context
             curr_step = len(self.history_steps)
 
-            #### call LLM for next action ###
-
-            ###########################################################
-            #     construct prompt for LLM based on previous steps    #
-            ###########################################################
+            # construct prompt for LLM based on previous steps
 
             prompt = self.initial_prompt
             if curr_step > last_steps:
-                if self.args.retrieval:
 
-                    # retrieval action
-                    relevant_history = env.execute(Action("Retrieval from Research Log", {"current_plan": ""}))
+                # retrieval action
+                relevant_history = env.execute(Action("Retrieval from Research Log", {"current_plan": ""}))
 
 
-                    prompt += f"""
-        Here is a summary of relevant actions and observations you have done:
-        ```
-        {relevant_history}
-        ```
-        Here are the exact several steps you have done most recently (up to 3 steps):
-        """
+                prompt += f"""
+    Here is a summary of relevant actions and observations you have done:
+    ```
+    {relevant_history}
+    ```
+    Here are the exact several steps you have done most recently (up to 3 steps):
+    """
             else:
                 prompt += "\nNow let's start!\n\n"
 
             for idx in range(max(curr_step - last_steps, 0), curr_step):
-                action_string = ""
                 action_string = self.print_action(self.history_steps[idx]["action"], self.valid_format_entires)
 
-                prompt += anthropic.AI_PROMPT + "\n"+ action_string + "\nObservation:"
+                prompt += f"Action:\n{action_string}\nObservation:\n"
                 if curr_step - idx > last_observation_step:
                     prompt += "<Done>\n\n"
                 else:
                     try:
-                        prompt += "\n```\n" + self.history_steps[idx]["observation"] + "\n```\n\n"
+                        prompt += "```\n" + self.history_steps[idx]["observation"] + "\n```\n\n"
                     except:
                         import pdb; pdb.set_trace()
-                
 
-            ###############################################
-            #     call LLM until the response is valid    #
-            ###############################################
+            # call LLM until the response is valid
 
             entries = None
             valid_response = False
@@ -132,9 +110,7 @@ class ResearchAgent(Agent):
             if not valid_response:
                 return "No valid response after max_retries"
 
-            ########################################################
-            #     postprocess LLM output and parse to env actions  #
-            ########################################################
+            # postprocess LLM output and parse to env actions
 
             rg = entries["Research Plan and Status"]
             action = entries["Action"].strip()
@@ -149,6 +125,7 @@ class ResearchAgent(Agent):
             parsing_error = ""
             try:
                 action_input = self.parse_action_input(raw_action_input, self.action_infos[action])
+                entries["Action Input"] = action_input
             except Exception as e:
                 action_input = raw_action_input
                 parsing_error = str(e)
@@ -159,9 +136,7 @@ class ResearchAgent(Agent):
                 f.write(anthropic.AI_PROMPT + "\n" + self.print_action(entries, self.valid_format_entires) + "\nObservation:\n")
 
 
-            ########################################
-            #         execute action in env        #
-            ########################################
+            # execute action in env
 
             if type(action_input) == dict:
                 observation = env.execute(Action(action, action_input))
@@ -170,14 +145,12 @@ class ResearchAgent(Agent):
                 usage = ",\n            ".join([f"{k}: [{v}]" for k, v in self.action_infos[action].usage.items()])
                 usage = f"""{{
             {usage}
-}}"""
+    }}"""
                 invalid_action_error = f"The action input for {action} needs to be a valid json with proper entries. You may have missed the comma between entries or used triple quotes (json does not recognizes triple quotes). Please use the correct format and try again:\n{usage}"
 
                 observation = "ActionInputParsingError: "+ parsing_error + "\n" + invalid_action_error
 
-            #######################################################
-            #               update history_steps                  #
-            #######################################################
+            # update history_steps
 
             # if observation is too long, we need to summarize it
             if len(observation) > 5000:
@@ -186,8 +159,20 @@ class ResearchAgent(Agent):
                 print("Observation is too long. Summarizing...", file=sys.stderr)
                 observation = self.summarize_observation(self.print_action(entries, self.valid_format_entires), observation, log_file)
 
+            info=dict(
+                relevant_history=relevant_history,
+                reflection=entries["Reflection"],
+                research_plan_status=entries["Research Plan and Status"],
+                fact_check=entries["Fact Check"],
+                thought=entries["Thought"],
+                questions=entries["Questions"],
+                action=entries["Action"],
+                action_input=entries["Action Input"],
+                observation=entries["Observation"],
+            )
 
-            feedback = self.user.interact(relevant_history, entries, observation)
+            # give info to user and get feedback in return
+            feedback = (yield info)
 
             self.history_steps.append({
                 "step_idx": len(env.trace.steps),
@@ -196,7 +181,7 @@ class ResearchAgent(Agent):
                 "feedback": feedback,
             })
 
-            ## filter out ActionInputParsingError if last step is not action input parsing error
+            # filter out ActionInputParsingError if last step is not action input parsing error
             if not observation.startswith("ActionInputParsingError"):
                 self.history_steps = [step for step in self.history_steps if not step["observation"].startswith("ActionInputParsingError")]
 
@@ -204,36 +189,29 @@ class ResearchAgent(Agent):
                 f.write("\n```\n" + self.history_steps[-1]["observation"] + "\n```\n\n")
 
 
-            #######################################################
-            #      write to research log for retrieval            #
-            #######################################################
-            if self.args.retrieval:
-                summary_of_last_step = "Too long to summarize."
-                for _ in range(self.args.max_retries):
-                    try:
-                        log_file = os.path.join(self.log_dir , f"step_{curr_step}_summary_log.log")
-                        summary_of_last_step = self.summarize_log_entry(
-                            action=self.print_action(self.history_steps[-1]["action"], self.valid_format_entires),
-                            observation=self.history_steps[-1]["observation"],
-                            feedback=self.history_steps[-1]["feedback"],
-                            log_file = log_file
-                        )
-                        break
-                    except Exception as e:
-                        print(e)
-                        print("Trying again.")
+            # write to research log for retrieval
+            summary_of_last_step = "Too long to summarize."
+            for _ in range(self.args.max_retries):
+                try:
+                    summary_of_last_step = self.summarize_log_entry(
+                        action=self.print_action(self.history_steps[-1]["action"], self.valid_format_entires),
+                        observation=self.history_steps[-1]["observation"],
+                        feedback=self.history_steps[-1]["feedback"],
+                    )
+                    break
+                except Exception as e:
+                    print(e)
+                    print("Trying again.")
 
-                action = "Append Summary to Research Log"
-                action_input = { "content": "\n\nStep " + str(curr_step) + ":\n" + summary_of_last_step + "\n"}
-                env.execute(Action(action, action_input))
+            env.execute(Action(
+                name="Append Summary to Research Log",
+                args={
+                    "content": "\n\nStep " + str(curr_step) + ":\n" + summary_of_last_step + "\n"
+                },
+            ))
 
             step_idx = len(env.trace.steps) - 1
             self.save(os.path.join(self.log_dir , f"agent_{step_idx}_{curr_step}.json"))
-
-        if env.is_final():
-            return "Finished due to env.is_final() == True"
-        else:
-            return "Finished due to agent max steps reached"
 
 
     ################### Helper functions #####################

@@ -2,7 +2,6 @@ from abc import ABC, abstractmethod
 
 class User(ABC):
     """Base class for interface to user"""
-    @staticmethod
     @abstractmethod
     def interact(relevant_history: str, entries: dict, observation: str) -> str:
         pass

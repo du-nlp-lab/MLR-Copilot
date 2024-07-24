@@ -7,7 +7,7 @@ import re
 import glob
 import copy
 from argparse import Namespace
-import anthropic
+from abc import abstractmethod, ABC
 import reactagent.high_level_actions as high_level_actions
 from reactagent.schema import Action, EnhancedJSONEncoder
 from reactagent.reactagent.llm import complete_text
@@ -33,12 +33,11 @@ format_prompt_dict = {
 }
 
 
-class Agent:
+class Agent(ABC):
     """ Base class for agents. """
 
     def __init__(self, args, env):        
         self.args = args
-        self.valid_format_entires = ["Action", "Action Input"]
         self.log_dir = os.path.join(args.log_dir, "agent_log")
 
         self.action_infos = env.action_infos
@@ -63,8 +62,6 @@ class Agent:
         high_level_actions.EDIT_SCRIPT_MAX_TOKENS = args.edit_script_llm_max_tokens
         self.tools_prompt = self.construct_tools_prompt(tool_names, env.action_infos)
 
-        self.initial_prompt = initial_prompt.format(tools_prompt=self.tools_prompt, tool_names=self.prompt_tool_names,  task_description=env.research_problem, format_prompt="\n".join([f"{k}: {format_prompt_dict[k]}" for k in self.valid_format_entires]))       
-
         self.history_steps = []
 
         self.initialize_logging()
@@ -74,13 +71,6 @@ class Agent:
             latest_file = max(list_of_files, key=os.path.getctime)
             print("Restoring agent from {}".format(latest_file))
             self.restore(latest_file)
-
-
-    def run(self, env):
-        """ Run the agent on the environment. """
-        # A simple baseline that always executes train.py and reports final answer
-        env.execute(Action("Execute Script", {"script_name": "train.py"}))
-        env.execute(Action("Final Answer", "Done!"))
 
 
     def initialize_logging(self): 
@@ -212,7 +202,7 @@ class Agent:
     @staticmethod
     def print_action(entries, valid_format_entires):
         """ Print the action in a readable format."""
-        return "".join([ k + ": " + entries[k] for k in  valid_format_entires])
+        return "".join([ k + ": " + json.dumps(entries[k]) for k in  valid_format_entires])
 
 
     @staticmethod
@@ -229,104 +219,3 @@ class Agent:
 
         parsed = [r for r in result.groups()]
         return {e: parsed[idx]  for idx, e in enumerate(entries)}
-
-class SimpleActionAgent(Agent):
-    """ Agent that takes actions based on the LLM output with the simplest prompt."""
-
-    def run(self, env):
-        last_steps = self.args.max_steps_in_context
-
-        with open(os.path.join(self.log_dir , "main_log"), "a", 1) as f:
-            f.write(self.initial_prompt + "\n")
-
-        while not env.is_final() and len(self.history_steps) < self.args.agent_max_steps:
-
-            curr_step = len(self.history_steps)
-
-            #### call LLM for next action ###
-
-            ###############################################################
-            #     construct prompt for LLM based on truncated  steps      #
-            ###############################################################
-
-            prompt = self.initial_prompt
-            prompt += "\nNow let's start!\n\n"
-
-            for idx in range(max(0, curr_step - last_steps), curr_step):
-                action_string = self.print_action(self.history_steps[idx]["action"], self.valid_format_entires)
-                prompt += anthropic.AI_PROMPT + "\n"+ action_string + "\nObservation:"
-                prompt += "\n```\n" + self.history_steps[idx]["observation"] + "\n```\n\n"
-
-            ###############################################
-            #     call LLM until the response is valid    #
-            ###############################################
-
-            entries = None
-            valid_response = False
-            for _ in range(self.args.max_retries):
-                completion = complete_text(prompt, self.args.llm_name)
-
-                try:
-                    entries = self.parse_entries(completion, self.valid_format_entires)
-                    assert entries["Action"].strip() in self.all_tool_names
-                    valid_response = True
-                except:
-                    print("Step", curr_step, file=sys.stderr)
-                    print(anthropic.AI_PROMPT + "\n" + completion + "\nObservation:\n", file=sys.stderr)
-                    print("Response is invalid and discarded", file=sys.stderr)
-                else:
-                    break
-            if not valid_response:
-                return "No valid response after max_retries"
-
-            ########################################
-            #     parse LLM output to env actions  #
-            ########################################
-
-            action = entries["Action"].strip()
-            raw_action_input = entries["Action Input"]
-            
-            # parse the action input if we can ; other wise just return the original input and wait env to throw back an error
-            try:
-                action_input = self.parse_action_input(raw_action_input, self.action_infos[action])
-            except:
-                # parse failed, just use the original input
-                # the env will throw back an error with correct usage
-                action_input = raw_action_input
-
-
-
-            with open(os.path.join(self.log_dir , "main_log"), "a", 1) as f:
-                f.write("Step " + str(curr_step) + ":\n")
-                f.write(anthropic.AI_PROMPT + "\n" + self.print_action(entries, self.valid_format_entires) + "\nObservation:\n")
-
-
-            ########################################
-            #         execute action in env        #
-            ########################################
-
-            observation = env.execute(Action(action, action_input))
-
-            #######################################################
-            #               update base on observation            #
-            #######################################################
-
-            self.history_steps.append({"step_idx": len(env.trace.steps), "action": entries, "observation": observation})
-
-            with open(os.path.join(self.log_dir , "main_log"), "a", 1) as f:
-                f.write("\n```\n" + self.history_steps[-1]["observation"] + "\n```\n\n")
-
-            step_idx = len(env.trace.steps) - 1
-            self.save(os.path.join(self.log_dir , f"agent_{step_idx}_{curr_step}.json"))
-
-        return "Finished successfully"
-
-
-class ReasoningActionAgent(SimpleActionAgent):
-    """ A implementation of react agent that promts the model to think first before taking actions."""
-
-    def __init__(self, args, env):        
-        super().__init__(args, env)
-        self.valid_format_entires = ["Thought", "Action", "Action Input"]
-        self.initial_prompt = initial_prompt.format(tools_prompt=self.tools_prompt, tool_names=self.prompt_tool_names,  task_description=env.research_problem, format_prompt="\n".join([f"{k}: {format_prompt_dict[k]}" for k in self.valid_format_entires]))
-    

@@ -1,8 +1,9 @@
 #!/bin/bash
 
-prob=$1
-name=$2
+name=$1
+mode=$2
 
+prob="problems/$name"
 logdir="logs/$name"
 workdir="workspaces/$name"
 
@@ -12,4 +13,4 @@ if [ -d $logdir ]; then
 fi
 mkdir -p $logdir
 
-python -u -m reactagent.runner --research-problem $prob --log-dir $logdir --work-dir $workdir --retrieval
+python -u -m reactagent.runner --research-problem "$(< $prob)" --log-dir $logdir --work-dir $workdir --retrieval

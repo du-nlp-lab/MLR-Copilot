@@ -13,7 +13,6 @@ import fnmatch
 import signal
 from traceback import format_exception
 from multiprocessing import active_children
-import readline # to make sure input() works properly
 from dacite import from_dict
 
 from .low_level_actions import LOW_LEVEL_ACTIONS
@@ -31,9 +30,7 @@ class Environment:
         self._log_dir = os.path.join(args.log_dir, "env_log")
         self._setup_log_dir()
 
-        with args.research_problem as f:
-            self._research_problem = f.read().strip()
-        args.research_problem = args.research_problem.name
+        self._research_problem = args.research.problem
         self._work_dir = args.work_dir
         self._read_only_files = []
 
@@ -53,6 +50,9 @@ class Environment:
         self._start_time = time.time()
 
     ############################## getters ########################################
+    @property
+    def user(self):
+        return self._user
 
     @property
     def research_problem(self):

@@ -17,7 +17,6 @@ tqdm
 kaggle
 
 # llm
-openai
 anthropic
 sentencepiece
 peft
@@ -30,7 +29,6 @@ ogb
 
 
 #others
-nest_asyncio
 dacite
 python-dotenv
 
@@ -43,6 +41,3 @@ tevatron
 mdtex2html
 retriv
 tiktoken
-aiolimiter
-litellm
-nest_asyncio

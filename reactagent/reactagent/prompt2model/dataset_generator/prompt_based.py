@@ -9,8 +9,6 @@ import random
 from collections import Counter, defaultdict
 from dataclasses import dataclass
 
-import nest_asyncio
-import openai
 from datasets import Dataset
 from tqdm import tqdm
 
@@ -23,7 +21,6 @@ from reactagent.prompt2model.utils import (
     get_formatted_logger,
 )
 
-nest_asyncio.apply()
 logger = get_formatted_logger("DatasetGenerator")
 
 
@@ -286,7 +283,7 @@ class PromptBasedDatasetGenerator(DatasetGenerator):
         return batch_size
 
     def extract_and_append_responses(
-        self, completions: list[openai.Completion], generated_examples: list[Example]
+        self, completions: list[str], generated_examples: list[Example]
     ) -> None:
         """Extracts the generated sample and annotation from an API response.
 
@@ -308,33 +305,32 @@ class PromptBasedDatasetGenerator(DatasetGenerator):
         """
         for completion in completions:
             try:
-                for choice in completion.choices:
-                    try:
-                        response_json = json.loads(choice["message"]["content"])
-                    except Exception:
-                        logger.warning(f"Error happened parsing API choice: {choice}")
-                        continue
-                        # If the response is not a valid JSON object, discard it.
-                    required_keys = ["input", "output"]
-                    missing_keys = [
-                        key for key in required_keys if key not in response_json
-                    ]
-                    if len(missing_keys) != 0:
-                        logger.warning(
-                            f'API response must contain {", ".join(required_keys)} keys'
-                        )
-                        continue
-                    input = str(response_json["input"]).strip()
-                    output = str(response_json["output"]).strip()
-                    if input != "" and output != "":
-                        generated_examples.append(Example(input, output))
-                    else:
-                        logger.info(
-                            "Empty input or output ditected. Discard this example."
-                        )
-                        continue
-                    logger.info(f"input: \n\n{input}\n\n")
-                    logger.info(f"output: \n\n{output}\n\n")
+                try:
+                    response_json = json.loads(completion)
+                except Exception:
+                    logger.warning(f"Error happened parsing API completion: {completion}")
+                    continue
+                    # If the response is not a valid JSON object, discard it.
+                required_keys = ["input", "output"]
+                missing_keys = [
+                    key for key in required_keys if key not in response_json
+                ]
+                if len(missing_keys) != 0:
+                    logger.warning(
+                        f'API response must contain {", ".join(required_keys)} keys'
+                    )
+                    continue
+                input = str(response_json["input"]).strip()
+                output = str(response_json["output"]).strip()
+                if input != "" and output != "":
+                    generated_examples.append(Example(input, output))
+                else:
+                    logger.info(
+                        "Empty input or output ditected. Discard this example."
+                    )
+                    continue
+                logger.info(f"input: \n\n{input}\n\n")
+                logger.info(f"output: \n\n{output}\n\n")
             except Exception:
                 logger.warning(
                     f"Error happened when parsing API completion: {completion}"
@@ -365,7 +361,7 @@ class PromptBasedDatasetGenerator(DatasetGenerator):
         temperature is rounded within the range [0, 2.0].
 
         Returns:
-            A list of openai.Completion.
+            A list of strings.
         """
         # Calculate the dynamic temperature based
         # on the size of the generated dataset
