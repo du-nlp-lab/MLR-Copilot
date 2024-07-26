@@ -13,4 +13,4 @@ if [ -d $logdir ]; then
 fi
 mkdir -p $logdir
 
-python -u -m reactagent.runner --research-problem "$(< $prob)" --log-dir $logdir --work-dir $workdir --retrieval
+python -u -m reactagent.runner --research-problem "$(< $prob)" --log-dir $logdir --work-dir $workdir

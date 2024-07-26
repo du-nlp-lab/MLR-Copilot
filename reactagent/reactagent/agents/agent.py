@@ -10,7 +10,7 @@ from argparse import Namespace
 from abc import abstractmethod, ABC
 import reactagent.high_level_actions as high_level_actions
 from reactagent.schema import Action, EnhancedJSONEncoder
-from reactagent.reactagent.llm import complete_text
+from reactagent.llm import complete_text
 
 initial_prompt = """You are a helpful research assistant. You have access to the following tools:
 {tools_prompt}

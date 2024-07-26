@@ -15,8 +15,8 @@ class SessionInfo:
 
         rawargs = [
             '--research-problem', prompt,
-            '--log-dir', str(Path('logs', id)),
-            '--work-dir', str(Path('workspaces', id)),
+            '--log-dir', str(Path('/', 'data', 'logs', id)),
+            '--work-dir', str(Path('/', 'data', 'workspaces', id)),
             '--retrieval',
         ]
 

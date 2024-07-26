@@ -1,1 +1,1 @@
-docker run -it --gpus all --user root 'tortcode/autoresearch:3.0' bash
+docker run -it -v '.':'/app' --user root 'tortcode/autoresearch:4.0' bash

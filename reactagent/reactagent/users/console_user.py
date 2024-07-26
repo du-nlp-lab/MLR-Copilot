@@ -1,4 +1,4 @@
-from reactagent.users import User
+from reactagent.users.user import User
 
 class ConsoleUser(User):
     def interact(self, info):

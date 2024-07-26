@@ -2,7 +2,7 @@
 import os
 import sys
 import anthropic
-from reactagent.reactagent.llm import complete_text_fast, complete_text
+from reactagent.llm import complete_text_fast, complete_text
 from reactagent.schema import Action
 from .agent import Agent
 from .format import format_prompt_dict

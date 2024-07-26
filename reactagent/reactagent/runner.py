@@ -5,7 +5,7 @@ This file is the entry point for MLAgentBench.
 import argparse
 from dotenv import load_dotenv
 load_dotenv()
-from reactagent import LLM
+from reactagent import llm
 from reactagent.environment import Environment
 from reactagent.agents.agent_research import ResearchAgent
 from reactagent.users.console_user import ConsoleUser
@@ -63,6 +63,6 @@ def create_parser() -> argparse.ArgumentParser:
 if __name__ == "__main__":
     parser = create_parser()
     args = parser.parse_args()
-    LLM.FAST_MODEL = args.fast_llm_name
+    llm.FAST_MODEL = args.fast_llm_name
     run(args)
     

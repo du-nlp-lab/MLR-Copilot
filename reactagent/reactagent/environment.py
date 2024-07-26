@@ -30,7 +30,7 @@ class Environment:
         self._log_dir = os.path.join(args.log_dir, "env_log")
         self._setup_log_dir()
 
-        self._research_problem = args.research.problem
+        self._research_problem = args.research_problem
         self._work_dir = args.work_dir
         self._read_only_files = []
 
