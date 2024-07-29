@@ -10,20 +10,16 @@ class SessionInfo:
         self.coro_cache = {}
         self.parser = create_parser()
 
-    def _make_session(self, prompt, session_hash):
+    def make_session(self, prompt, session_hash):
         id = session_hash
 
         rawargs = [
             '--research-problem', prompt,
-            '--log-dir', str(Path('/', 'data', 'logs', id)),
-            '--work-dir', str(Path('/', 'data', 'workspaces', id)),
-            '--retrieval',
+            '--log-dir', str(Path('logs', id)),
+            '--work-dir', str(Path('workspaces', id)),
         ]
 
         args = self.parser.parse_args(rawargs)
-
-        from reactagent import LLM
-        LLM.FAST_MODEL = args.fast_llm_name
 
         env = Environment(args)
         agent = ResearchAgent(args, env)

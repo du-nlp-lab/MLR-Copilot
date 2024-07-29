@@ -12,4 +12,4 @@ if [ -d $logdir ]; then
 fi
 mkdir -p $logdir
 
-python -u -m reactagent.runner.py --research-problem "$(< $prob)" --log-dir $logdir --work-dir $workdir
+python -u -m reactagent/runner.py --research-problem "$(< $prob)" --log-dir $logdir --work-dir $workdir

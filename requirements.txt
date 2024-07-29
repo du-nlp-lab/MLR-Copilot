@@ -1,15 +1,19 @@
+--extra-index-url https://download.pytorch.org/whl/cu118 
+torch
+torchvision
+torchaudio
+
+huggingface_hub==0.22.2
 # images
 pillow
 
 # common ml packages
-# torch>=2.0.0
-# torchvision
 transformers
 scikit-learn
 xgboost
 keras
 scipy
-numpy
+numpy==1.26.4
 pandas
 matplotlib
 seaborn
@@ -34,10 +38,11 @@ python-dotenv
 
 # for p2m specifically
 datasets
-fastapi
 gradio==3.38.0
 bert_score
 tevatron
 mdtex2html
 retriv
 tiktoken
+
+charset-normalizer==3.1.0
