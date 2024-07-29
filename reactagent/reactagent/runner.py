@@ -43,9 +43,9 @@ def create_parser() -> argparse.ArgumentParser:
     parser.add_argument("--resume-step", type=int, default=0, help="the step to resume from")
 
     # general agent configs
-    parser.add_argument("--llm-name", type=str, default="CodeLlama-70b-Python", help="llm name")
-    parser.add_argument("--fast-llm-name", type=str, default="CodeLlama-70b-Python", help="llm name")
-    parser.add_argument("--edit-script-llm-name", type=str, default="CodeLlama-70b-Python", help="llm name")
+    parser.add_argument("--llm-name", type=str, default="CodeLlama-13b-Python", help="llm name")
+    parser.add_argument("--fast-llm-name", type=str, default="CodeLlama-13b-Python", help="llm name")
+    parser.add_argument("--edit-script-llm-name", type=str, default="CodeLlama-13b-Python", help="llm name")
     parser.add_argument("--edit-script-llm-max-tokens", type=int, default=4000, help="llm max tokens")
     parser.add_argument("--agent-max-steps", type=int, default=50, help="max iterations for agent")
 
@@ -63,6 +63,5 @@ def create_parser() -> argparse.ArgumentParser:
 if __name__ == "__main__":
     parser = create_parser()
     args = parser.parse_args()
-    llm.FAST_MODEL = args.fast_llm_name
     run(args)
     
