@@ -225,6 +225,8 @@ P2M_ACTIONS = [
         is_primitive=False,
         function=retrieve_model
     ),
+]
+"""
     ActionInfo(
         name="Process Dataset",
         description="Process dataset based on a detailed description of the requirements. You can load the processed data later from `save_dirs` using the load_from_disk function of the HuggingFace datasets library. The input text will be in the `model_input` column and the output text will be in the `model_output` column.",
@@ -281,3 +283,4 @@ P2M_ACTIONS = [
         function=evaluate_model,
     )
 ]
+"""

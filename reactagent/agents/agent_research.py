@@ -7,8 +7,6 @@ from reactagent.schema import Action
 from .agent import Agent
 from .format import format_prompt_dict
 
-from reactagent.prompt2model.prompt_parser import TaskType, PromptBasedInstructionParser
-
 initial_prompt = """You are a helpful research assistant. You have access to the following tools:
 {tools_prompt}
 
@@ -44,16 +42,15 @@ class ResearchAgent(Agent):
         self.valid_format_entires = format_prompt_dict.keys() # use all entries by default
         if args.valid_format_entires:
             self.valid_format_entires = args.valid_format_entires
-        self.prompt_spec = PromptBasedInstructionParser(TaskType.TEXT_GENERATION)
-        self.prompt_spec.parse_from_prompt(env.research_problem)
-        task_desc = f'Instruction: {self.prompt_spec.instruction}\nExamples: {self.prompt_spec.examples}'
+        task_desc = env.research_problem
         self.initial_prompt = initial_prompt.format(tools_prompt=self.tools_prompt, tool_names=self.prompt_tool_names,  task_description=task_desc, format_prompt="\n".join([f"{k}: {format_prompt_dict[k]}" for k in self.valid_format_entires]))
 
         with open(os.path.join(self.log_dir , "main_log"), "a", 1) as f:
             f.write(self.initial_prompt + "\n")
 
     def run(self, env):
-        while env.is_final() or len(self.history_steps) >= self.args.agent_max_steps:
+        feedback = ""
+        while not (env.is_final() or len(self.history_steps) >= self.args.agent_max_steps):
             last_steps = self.args.max_steps_in_context
             last_observation_step = self.args.max_observation_steps_in_context
             curr_step = len(self.history_steps)
@@ -66,7 +63,6 @@ class ResearchAgent(Agent):
                 # retrieval action
                 relevant_history = env.execute(Action("Retrieval from Research Log", {"current_plan": ""}))
 
-
                 prompt += f"""
     Here is a summary of relevant actions and observations you have done:
     ```
@@ -75,6 +71,7 @@ class ResearchAgent(Agent):
     Here are the exact several steps you have done most recently (up to 3 steps):
     """
             else:
+                relevant_history = ""
                 prompt += "\nNow let's start!\n\n"
 
             for idx in range(max(curr_step - last_steps, 0), curr_step):
@@ -90,9 +87,11 @@ class ResearchAgent(Agent):
                         import pdb; pdb.set_trace()
 
             # call LLM until the response is valid
+            prompt += f"\nPrevious Feedback from Human: {feedback}\n"
 
             entries = None
             valid_response = False
+            print("PROVIDED PROMPT:\n", prompt)
             for _ in range(self.args.max_retries):
                 log_file = os.path.join(self.log_dir , f"step_{curr_step}_log.log")
                 completion = complete_text(prompt, self.args.llm_name)
@@ -110,6 +109,8 @@ class ResearchAgent(Agent):
             if not valid_response:
                 return "No valid response after max_retries"
 
+
+            print("ENTRIES GENERATED")
             # postprocess LLM output and parse to env actions
 
             rg = entries["Research Plan and Status"]
@@ -150,10 +151,12 @@ class ResearchAgent(Agent):
 
                 observation = "ActionInputParsingError: "+ parsing_error + "\n" + invalid_action_error
 
+            print("OBSERVATION GENERATED")
+
             # update history_steps
 
             # if observation is too long, we need to summarize it
-            if len(observation) > 5000:
+            if len(observation) > 1000:
                 log_file = os.path.join(self.log_dir , f"step_{curr_step}_summarize_observation_log.log")
 
                 print("Observation is too long. Summarizing...", file=sys.stderr)
@@ -168,7 +171,7 @@ class ResearchAgent(Agent):
                 questions=entries["Questions"],
                 action=entries["Action"],
                 action_input=entries["Action Input"],
-                observation=entries["Observation"],
+                observation=observation,
             )
 
             # give info to user and get feedback in return
@@ -277,7 +280,7 @@ Do not include any result that is guessed rather than directly confirmed by the 
         [Feedback]:
         {feedback}
         
-        Summarize your action and the observation in this format:
+        Summarize your action and the observation in this format concisely in under 300 words:
         [Reasoning]: Summarize the reasoning behind the action
         [Action]: Summarize all relevant details of the action objectively
         [Observation]: Summarize all relevant details in the observation objectively

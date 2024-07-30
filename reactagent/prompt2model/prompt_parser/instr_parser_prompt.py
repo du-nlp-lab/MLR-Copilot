@@ -35,56 +35,10 @@ Alternate Entity Names: ["Catholic Church", "Roman Catholic", "Catholic"]""",  #
         },
     ),
     (
-        """You are an expert baker answering users' questions. Reply as agent.
-
-Example conversation:
-
-User: Hey can you help me with something
-
-Agent: Sure! What do you need help with?
-
-User: I want to bake a cake but don't know what temperature to set the oven to.
-
-Agent: For most cakes, the oven should be preheated to 350°F (177°C).
-
-Current conversation:
-
-User: [Insert user's question]
-
-Agent:""",
-        {
-            "Instruction": (
-                "You are an expert baker answering users' "
-                + "questions. Reply as agent."
-            ),
-            "Demonstrations": """User: Hey can you help me with something
-
-Agent: Sure! What do you need help with?
-
-User: I want to bake a cake but don't know what temperature to set the oven to.
-
-Agent: For most cakes, the oven should be preheated to 350°F (177°C).""",
-        },
-    ),
-    (
         "You are given a list of integers. A list is shown by comma-separated numbers between two brackets. For example, [7,3,6] is a list. The number in location one is 7, the number in location two is 3, and the number in location three is 6. You should answer with a list such that every element at each location is equal to the product of elements at every other location in the input array. For example, if a list has four numbers, the answer you give should be created like this: First element of your list = product of second, third, and fourth elements in the given list. Second element of your list = product of First, third and fourth elements in the given list, etc.",  # noqa: E501
         {
             "Instruction": "You are given a list of integers. A list is shown by comma-separated numbers between two brackets. For example, [7,3,6] is a list. The number in location one is 7, the number in location two is 3, and the number in location three is 6. You should answer with a list such that every element at each location is equal to the product of elements at every other location in the input array. For example, if a list has four numbers, the answer you give should be created like this: First element of your list = product of second, third, and fourth elements in the given list. Second element of your list = product of First, third and fourth elements in the given list, etc.",  # noqa: E501
             "Demonstrations": "N/A",
-        },
-    ),
-    (
-        "I am learning Japanese. Please translate some Japanese sentences to English. For example, Japanese: その日、人類は思い出した。ヤツらに支配されていた恐怖を鳥籠の中に囚われていた屈辱を English: On that day, humanity remembered the fear of being dominated by them and the humiliation of being trapped in a birdcage.",  # noqa: E501
-        {
-            "Instruction": "I am learning Japanese. Please translate some Japanese sentences to English.",  # noqa: E501
-            "Demonstrations": "Japanese: その日、人類は思い出した。ヤツらに支配されていた恐怖を鳥籠の中に囚われていた屈辱を English: On that day, humanity remembered the fear of being dominated by them and the humiliation of being trapped in a birdcage.",  # noqa: E501
-        },
-    ),
-    (
-        "来到美国后，我需要学习如何自己做饭。你能告诉我一些菜需要准备的原料么？这里有一些例子：1. 菜名：西红柿炒蛋。原料：2. 菜名：青椒肉丝炒肉。原料：瘦肉、青椒、调味料（如大蒜、姜、料酒、生抽、盐、糖、鸡精或味精、胡椒粉）、植物油。",  # noqa: E501
-        {
-            "Instruction": "来到美国后，我需要学习如何自己做饭。你能告诉我一些菜需要准备的原料么？",  # noqa: E501
-            "Demonstrations": "2. 菜名：青椒肉丝炒肉。原料：瘦肉、青椒、调味料（如大蒜、姜、料酒、生抽、盐、糖、鸡精或味精、胡椒粉）、植物油。",  # noqa: E501
         },
     ),
     (

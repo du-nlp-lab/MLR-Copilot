@@ -11,18 +11,17 @@ import torch
 class LlamaAgent:
     def __init__(
         self,
-        model_name = "CodeLlama-13b-Python",
+        model_name,
         temperature: float = 0.2,
         top_p: float = 0.95,
-        max_batch_size: int = 8,
+        max_batch_size: int = 1,
         max_gen_len = 2000,
     ):
-        model = f"meta-llama/{model_name}-hf"
-        self.tokenizer = AutoTokenizer.from_pretrained(model)
+        model = f"meta-llama/{model_name}"
         self.pipeline = transformers.pipeline(
             "text-generation",
             model=model,
-            torch_dtype=torch.float16,
+            model_kwargs={"torch_dtype": torch.bfloat16},
             device_map="auto",
         )
         self.temperature = temperature
@@ -45,16 +44,19 @@ class LlamaAgent:
             top_p = self.top_p
         results = []
         for prompt in prompts:
-            results += self.pipeline(
-                prompt,
+            #print("PROMPT: ", prompt)
+            seqs = self.pipeline(
+                [{"role": "user", "content": prompt}],
                 do_sample=True,
                 temperature=temperature,
                 top_p=top_p,
                 num_return_sequences=num_responses,
-                eos_token_id=self.tokenizer.eos_token_id,
-                max_length=max_gen_len,
+                max_new_tokens=max_gen_len,
             )
-        return [r["generated_text"] for r in results]
+            seqs = [s["generated_text"][-1]["content"] for s in seqs]
+            results += seqs
+            #print("RESULTS: ", seqs)
+        return results
 
 agent_cache = {}
 
@@ -110,6 +112,6 @@ def complete_text(
     return completion
 
 # specify fast models for summarization etc
-FAST_MODEL = "CodeLlama-13b-Python"
+FAST_MODEL = "Meta-Llama-3.1-8B-Instruct"
 complete_text_fast = partial(complete_text, model=FAST_MODEL)
 
