@@ -32,3 +32,6 @@ trained_model/
 trained_tokenizer/
 
 
+# data
+babylm_data
+checkpoint-*/

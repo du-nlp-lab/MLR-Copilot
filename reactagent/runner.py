@@ -1,10 +1,6 @@
 """ 
 This file is the entry point for MLAgentBench.
 """
-import os
-from huggingface_hub import login
-login(os.environ["HF_TOKEN"])
-
 import argparse
 from reactagent import llm
 from dotenv import load_dotenv
@@ -41,17 +37,16 @@ def create_parser() -> argparse.ArgumentParser:
     parser.add_argument("--log-dir", type=str, default="./logs", help="log dir")
     parser.add_argument("--work-dir", type=str, default="./workspace", help="work dir")
     parser.add_argument("--max-steps", type=int, default=50, help="number of steps")
-    parser.add_argument("--max-time", type=int, default=5 * 60 * 60, help="max time")
+    parser.add_argument("--max-time", type=int, default=2 * 60 * 60, help="max time")
     parser.add_argument("--device", type=int, default=0, help="device id")
     parser.add_argument("--python", type=str, default="python3", help="python command")
     parser.add_argument("--resume", type=str, default=None, help="resume from a previous run")
     parser.add_argument("--resume-step", type=int, default=0, help="the step to resume from")
 
-    default_llm = "Meta-Llama-3.1-8B-Instruct"
     # general agent configs
-    parser.add_argument("--llm-name", type=str, default=default_llm, help="llm name")
-    parser.add_argument("--fast-llm-name", type=str, default=default_llm, help="llm name")
-    parser.add_argument("--edit-script-llm-name", type=str, default=default_llm, help="llm name")
+    parser.add_argument("--llm-name", type=str, help="llm name")
+    parser.add_argument("--fast-llm-name", type=str, help="llm name")
+    parser.add_argument("--edit-script-llm-name", type=str, help="llm name")
     parser.add_argument("--edit-script-llm-max-tokens", type=int, default=4000, help="llm max tokens")
     parser.add_argument("--agent-max-steps", type=int, default=50, help="max iterations for agent")
 

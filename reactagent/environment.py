@@ -36,7 +36,7 @@ class Environment:
 
         self._initialize_env() # set up work dir and log dir
 
-        self._action_infos =  {t.name: t for t in LOW_LEVEL_ACTIONS + HIGH_LEVEL_ACTIONS + P2M_ACTIONS}
+        self._action_infos =  {t.name: t for t in LOW_LEVEL_ACTIONS + HIGH_LEVEL_ACTIONS}
 
         self._static_kwargs_for_tools = {
             "device": args.device,
@@ -275,7 +275,6 @@ class Environment:
 
     def save(self, curr_step):
         """ Save the trace and snapshot of the workspace folder """     
-        print(f'ENV: saving step {curr_step}')
         with open(os.path.join(self.log_dir, f"trace.json"), "w") as f:
             json.dump(self.trace, f, indent=4, cls=EnhancedJSONEncoder)
 

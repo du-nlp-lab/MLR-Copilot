@@ -20,9 +20,8 @@ Follow these instructions and do not forget them:
 - Research Plan and Status must only include progress that has been made by previous steps. It should not include results not directly confirmed by the previous observation. 
 - Performance numbers and estimates can only be confirmed and included in the status by running the code and observing the output.
 - You should come up with a good experiment design that addresses the problem, and whenever applicable, define and measure the baseline performance of the relevant system or model before attempting any improvements.
-- Follow the plan and try to achieve the goal as straightforwardly as possible.
+- Follow the plan and try to achieve the goal as straightforwardly as possible, but pay strong attention to human feedback
 - Highlight the supporting experiment results and reasoning before drawing any conclusions. 
-- Do not try installing any new packages or libraries.
 - If you believe you have solved the problem, you can use the Final Answer action to submit your answer. You can only submit once, so double check that you have achieved the goal before submitting.
 
 Always respond in this format exactly:
@@ -58,21 +57,16 @@ class ResearchAgent(Agent):
             # construct prompt for LLM based on previous steps
 
             prompt = self.initial_prompt
-            if curr_step > last_steps:
+            # retrieval action
+            relevant_history = env.execute(Action("Retrieval from Research Log", {"current_plan": ""}))
 
-                # retrieval action
-                relevant_history = env.execute(Action("Retrieval from Research Log", {"current_plan": ""}))
-
-                prompt += f"""
+            prompt += f"""
     Here is a summary of relevant actions and observations you have done:
     ```
     {relevant_history}
     ```
-    Here are the exact several steps you have done most recently (up to 3 steps):
+    Here are the 3 most recent actions actions and observations
     """
-            else:
-                relevant_history = ""
-                prompt += "\nNow let's start!\n\n"
 
             for idx in range(max(curr_step - last_steps, 0), curr_step):
                 action_string = self.print_action(self.history_steps[idx]["action"], self.valid_format_entires)
@@ -89,9 +83,10 @@ class ResearchAgent(Agent):
             # call LLM until the response is valid
             prompt += f"\nPrevious Feedback from Human: {feedback}\n"
 
+            prompt += "\nNow let's start!\n\n"
+
             entries = None
             valid_response = False
-            print("PROVIDED PROMPT:\n", prompt)
             for _ in range(self.args.max_retries):
                 log_file = os.path.join(self.log_dir , f"step_{curr_step}_log.log")
                 completion = complete_text(prompt, self.args.llm_name)
@@ -174,6 +169,7 @@ class ResearchAgent(Agent):
                 observation=observation,
             )
 
+            print("GIVE FEEDBACK")
             # give info to user and get feedback in return
             feedback = (yield info)
 
