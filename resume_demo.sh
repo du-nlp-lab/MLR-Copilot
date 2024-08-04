@@ -2,10 +2,10 @@
 
 name=$1
 model=$2
-ts=$(date -Iseconds)
+step=$3
 
 prob="/app/problems/$name"
-logdir="/app/logs/$ts/$name"
+logdir="/app/logs/$name"
 workdir="/app/workspaces/$name"
 
 if [[ $model = llama ]]; then
@@ -31,6 +31,8 @@ mkdir -p $logdir
 python -u -m reactagent.runner \
 --research-problem "$(< $prob)" \
 --log-dir $logdir \
+--resume $logdir \
+--resume-step $step \
 --work-dir $workdir \
 --llm-name $llm \
 --edit-script-llm-name $llm \
