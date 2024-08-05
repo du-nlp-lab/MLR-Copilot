@@ -4,6 +4,7 @@ import os
 import datetime
 import shutil
 import difflib
+from pathlib import Path
 from .low_level_actions import read_file, write_file, append_file
 from .schema import ActionInfo, EnvException
 from .llm import complete_text_fast, complete_text
@@ -176,6 +177,9 @@ def inspect_script_lines( script_name, start_line_number, end_line_number, work_
 def retrieval_from_research_log(current_plan, work_dir = ".", **kwargs):
 
     research_problem = kwargs["research_problem"]
+
+    if not Path(work_dir, "research_log.log").exists():
+        return "Research Log is empty right now"
 
     research_log_content = read_file("research_log.log", work_dir = work_dir, **kwargs)
     

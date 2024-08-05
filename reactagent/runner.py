@@ -13,20 +13,16 @@ def run(args):
     with Environment(args) as env:
 
         print("=====================================")
-        research_problem = env.research_problem
-        print("Research problem: ", research_problem)
 
         agent = ResearchAgent(args, env)
         user = ConsoleUser()
         coro = agent.run(env)
         try:
             info = coro.send(None)
-            print("INFO", info)
             while True:
                 feedback = user.interact(info)
                 info = coro.send(feedback)
         except StopIteration:
-            print("STOPITER")
             pass
 
     env.save("final")

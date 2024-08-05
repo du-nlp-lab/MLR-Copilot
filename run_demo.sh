@@ -34,4 +34,5 @@ python -u -m reactagent.runner \
 --work-dir $workdir \
 --llm-name $llm \
 --edit-script-llm-name $llm \
---fast-llm-name $fastllm
+--fast-llm-name $fastllm \
+2>/dev/null

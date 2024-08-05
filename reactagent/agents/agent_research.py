@@ -59,6 +59,7 @@ class ResearchAgent(Agent):
                 prompt = self.initial_prompt
                 # retrieval action
                 relevant_history = env.execute(Action("Retrieval from Research Log", {"current_plan": ""}))
+                print('!! HISTORY RETRIEVED')
 
                 prompt += f"""
         Here is a summary of relevant actions and observations you have done:
@@ -105,7 +106,7 @@ class ResearchAgent(Agent):
                     return "No valid response after max_retries"
 
 
-                print("ENTRIES GENERATED")
+                print("!! ENTRIES GENERATED")
                 # postprocess LLM output and parse to env actions
 
                 rg = entries["Research Plan and Status"]
@@ -141,7 +142,7 @@ class ResearchAgent(Agent):
 
                     observation = "ActionInputParsingError: "+ parsing_error + "\n" + invalid_action_error
 
-                print("OBSERVATION GENERATED")
+                print("!! OBSERVATION GENERATED")
 
                 # update history_steps
 
@@ -153,6 +154,7 @@ class ResearchAgent(Agent):
 
                     print("Observation is too long. Summarizing...", file=sys.stderr)
                     observation = self.summarize_observation(self.print_action(entries, self.valid_format_entires), observation, log_file)
+                print("!! OBSERVATION SUMMARIZED")
 
                 info=dict(
                     relevant_history=relevant_history,
@@ -166,7 +168,7 @@ class ResearchAgent(Agent):
                     observation=observation,
                 )
 
-                print("GIVE FEEDBACK")
+                print("!! FEEDBACK STAGE")
                 # give info to user and get feedback in return
                 feedback = (yield info)
 
@@ -204,8 +206,9 @@ class ResearchAgent(Agent):
                         )
                         break
                     except Exception as e:
-                        print(e)
-                        print("Trying again.")
+                        print(e, file=sys.stderr)
+                        print("Trying again.", file=sys.stderr)
+
 
                 env.execute(Action(
                     name="Append Summary to Research Log",
@@ -213,6 +216,8 @@ class ResearchAgent(Agent):
                         "content": "\n\nStep " + str(curr_step) + ":\n" + summary_of_last_step + "\n"
                     },
                 ))
+
+                print("!! LOG UPDATED")
 
                 step_idx = len(env.trace.steps) - 1
                 self.save(os.path.join(self.log_dir , f"agent_{step_idx}_{curr_step}.json"))

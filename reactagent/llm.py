@@ -10,13 +10,12 @@ import os
 import time
 
 
-try:
-    import os
-    from huggingface_hub import login
-    login(os.environ["HF_TOKEN"])
-except Exception as e:
-    print(e)
-    print("Could not load hugging face token HF_TOKEN from environ")
+# try:
+#     from huggingface_hub import login
+#     login(os.environ["HF_TOKEN"])
+# except Exception as e:
+#     print(e)
+#     print("Could not load hugging face token HF_TOKEN from environ")
 
 try:
     import anthropic
@@ -31,7 +30,7 @@ try:
     openai_client = openai.OpenAI()
 except Exception as e:
     print(e)
-    print("Could not load OpenAI API key i_key.txt.")
+    print("Could not load OpenAI API key OPENAI_API_KEY from environ")
 
 class LlamaAgent:
     def __init__(
