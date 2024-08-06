@@ -1,0 +1,5 @@
+The Task:
+The paper addresses the task of automatically discerning the level of semantic relatedness between pairs of sentences. Specifically, the task involves predicting the Semantic Textual Relatedness (STR) of sentence pairs and ranking them based on their semantic proximity across 14 different languages.
+
+The Drawback of Previous Work:
+Previous research has predominantly focused on semantic similarity in English, leaving a gap in multilingual semantic relatedness evaluation. Prior methodologies may not have fully leveraged recent advancements in Transformer-based architectures for diverse multilingual datasets. Existing models might not effectively handle broader commonalities like topic, viewpoint, or temporal context across different languages.
