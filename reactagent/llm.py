@@ -82,7 +82,7 @@ class LlamaAgent:
 
 agent_cache = {}
 
-def complete_text_openai(prompt, stop_sequences=[], model="gpt-3.5-turbo", max_tokens_to_sample=500, temperature=0.2):
+def complete_text_openai(prompt, stop_sequences=[], model="gpt-3.5-turbo", max_tokens_to_sample=2000, temperature=0.2):
     """ Call the OpenAI API to complete a prompt."""
     raw_request = {
           "model": model,
@@ -92,10 +92,10 @@ def complete_text_openai(prompt, stop_sequences=[], model="gpt-3.5-turbo", max_t
     }
     messages = [{"role": "user", "content": prompt}]
     response = openai_client.chat.completions.create(messages=messages, **raw_request)
-    completion = response["choices"][0]["message"]["content"]
+    completion = response.choices[0].message.content
     return completion
 
-def complete_text_claude(prompt, stop_sequences=[anthropic.HUMAN_PROMPT], model="claude-v1", max_tokens_to_sample = 2000, temperature=0.5):
+def complete_text_claude(prompt, stop_sequences=[anthropic.HUMAN_PROMPT], model="claude-v1", max_tokens_to_sample=2000, temperature=0.5):
     """ Call the Claude API to complete a prompt."""
 
     ai_prompt = anthropic.AI_PROMPT

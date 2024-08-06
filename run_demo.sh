@@ -5,7 +5,7 @@ model=$2
 ts=$(date -Iseconds)
 
 prob="/app/problems/$name"
-logdir="/app/logs/$ts/$name"
+logdir="/app/logs/$name/$ts"
 workdir="/app/workspaces/$name"
 
 if [[ $model = llama ]]; then
@@ -15,8 +15,8 @@ elif [[ $model = claude ]]; then
     llm='claude-3-5-sonnet-20240620'
     fastllm='claude-3-haiku-20240307'
 elif [[ $model = gpt4 ]]; then
-    llm='gpt-4o-2024-05-13'
-    fastllm='gpt-4o-mini-2024-07-18'
+    llm='gpt-4o'
+    fastllm='gpt-4o-mini'
 fi
 
 echo using llm = $llm
@@ -34,5 +34,4 @@ python -u -m reactagent.runner \
 --work-dir $workdir \
 --llm-name $llm \
 --edit-script-llm-name $llm \
---fast-llm-name $fastllm \
-2>/dev/null
+--fast-llm-name $fastllm

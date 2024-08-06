@@ -48,6 +48,7 @@ class ResearchAgent(Agent):
 
     def run(self, env):
         feedback = ""
+        Path(self.log_dir).mkdir(parents=True, exist_ok=True)
         with Path(self.log_dir, "full_log.json").open(mode='a') as full_log:
             while not (env.is_final() or len(self.history_steps) >= self.args.agent_max_steps):
                 last_steps = self.args.max_steps_in_context
@@ -149,7 +150,7 @@ class ResearchAgent(Agent):
                 full_observation = observation
 
                 # if observation is too long, we need to summarize it
-                if len(observation) > 1000:
+                if len(observation) > 10000:
                     log_file = os.path.join(self.log_dir , f"step_{curr_step}_summarize_observation_log.log")
 
                     print("Observation is too long. Summarizing...", file=sys.stderr)
@@ -181,6 +182,7 @@ class ResearchAgent(Agent):
                         feedback=feedback,
                     ),
                     fp=full_log,
+                    indent=2,
                 )
 
                 self.history_steps.append({
@@ -220,7 +222,7 @@ class ResearchAgent(Agent):
                 print("!! LOG UPDATED")
 
                 step_idx = len(env.trace.steps) - 1
-                self.save(os.path.join(self.log_dir , f"agent_{step_idx}_{curr_step}.json"))
+                # self.save(os.path.join(self.log_dir , f"agent_{step_idx}_{curr_step}.json"))
 
 
     ################### Helper functions #####################

@@ -2,9 +2,9 @@
 This file is the entry point for MLAgentBench.
 """
 import argparse
-from reactagent import llm
 from dotenv import load_dotenv
 load_dotenv()
+from reactagent import llm
 from reactagent.environment import Environment
 from reactagent.agents.agent_research import ResearchAgent
 from reactagent.users.console_user import ConsoleUser

@@ -64,13 +64,13 @@ class Agent(ABC):
 
         self.history_steps = []
 
-        self.initialize_logging()
+        # self.initialize_logging()
 
-        if self.args.resume:
-            list_of_files = glob.glob(os.path.join(self.args.resume, f"agent_log/agent_{self.args.resume_step}_*.json"))
-            latest_file = max(list_of_files, key=os.path.getctime)
-            print("Restoring agent from {}".format(latest_file))
-            self.restore(latest_file)
+        # if self.args.resume:
+        #     list_of_files = glob.glob(os.path.join(self.args.resume, f"agent_log/agent_{self.args.resume_step}_*.json"))
+        #     latest_file = max(list_of_files, key=os.path.getctime)
+        #     print("Restoring agent from {}".format(latest_file))
+        #     self.restore(latest_file)
 
 
     def initialize_logging(self): 
@@ -94,7 +94,7 @@ class Agent(ABC):
             try:
                 json.dump(self.__dict__, f, indent=4,cls=EnhancedJSONEncoder)
             except:
-                print("save agent state failed")
+                print("save agent state failed", file=sys.stderr)
                 pass
 
 
