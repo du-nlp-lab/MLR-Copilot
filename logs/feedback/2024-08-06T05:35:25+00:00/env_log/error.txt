@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "/app/reactagent/runner.py", line 23, in run
+    feedback = user.interact(info)
+  File "/app/reactagent/users/console_user.py", line 17, in interact
+    feedback = input(f"Please provide feedback based on the history, response entries, and observation, and questions: ")
+KeyboardInterrupt
