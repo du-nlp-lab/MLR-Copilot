@@ -41,6 +41,8 @@ class LlamaAgent:
         max_batch_size: int = 1,
         max_gen_len = 2000,
     ):
+        from huggingface_hub import login
+        login()
         model = f"meta-llama/{model_name}"
         self.pipeline = transformers.pipeline(
             "text-generation",
@@ -59,7 +61,7 @@ class LlamaAgent:
         temperature=None,
         top_p=None,
         num_responses=1,
-    ) -> str:
+    ) -> list[str]:
         if max_gen_len is None:
             max_gen_len = self.max_gen_len
         if temperature is None:
@@ -134,8 +136,8 @@ def complete_text_claude(prompt, stop_sequences=[anthropic.HUMAN_PROMPT], model=
     return completion
 
 def complete_multi_text(
-    prompts: str, model: str, 
-    max_tokens_to_sample=None, 
+    prompts: str, model: str,
+    max_tokens_to_sample=None,
     temperature=0.5,
     top_p=None,
     responses_per_request=1,
@@ -188,8 +190,8 @@ def complete_multi_text(
         return completions
 
 def complete_text(
-    prompt: str, model: str, 
-    max_tokens_to_sample=2000, 
+    prompt: str, model: str,
+    max_tokens_to_sample=2000,
     temperature=0.5,
     top_p=None,
 ) -> str:
@@ -207,4 +209,3 @@ def complete_text(
 FAST_MODEL = "claude-3-haiku"
 def complete_text_fast(prompt, *args, **kwargs):
     return complete_text(prompt, model=FAST_MODEL, *args, **kwargs)
-
