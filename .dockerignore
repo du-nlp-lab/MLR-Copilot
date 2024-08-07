@@ -1,0 +1,7 @@
+.env
+.git/
+.gitignore
+logs/
+problems/
+workspaces/
+benchmarks/
