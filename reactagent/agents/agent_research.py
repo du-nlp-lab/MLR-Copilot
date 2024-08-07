@@ -49,7 +49,7 @@ class ResearchAgent(Agent):
     def run(self, env):
         feedback = ""
         Path(self.log_dir).mkdir(parents=True, exist_ok=True)
-        with Path(self.log_dir, "full_log.json").open(mode='a') as full_log:
+        with Path(self.log_dir, "full_log.jsonl").open(mode='a') as full_log:
             while not (env.is_final() or len(self.history_steps) >= self.args.agent_max_steps):
                 last_steps = self.args.max_steps_in_context
                 last_observation_step = self.args.max_observation_steps_in_context
@@ -184,6 +184,7 @@ class ResearchAgent(Agent):
                     fp=full_log,
                     indent=2,
                 )
+                fp.write('\n')
 
                 self.history_steps.append({
                     "step_idx": len(env.trace.steps),
