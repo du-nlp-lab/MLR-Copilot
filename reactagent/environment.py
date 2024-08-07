@@ -36,7 +36,7 @@ class Environment:
 
         self._initialize_env() # set up work dir and log dir
 
-        self._action_infos =  {t.name: t for t in LOW_LEVEL_ACTIONS + HIGH_LEVEL_ACTIONS}
+        self._action_infos =  {t.name: t for t in LOW_LEVEL_ACTIONS + HIGH_LEVEL_ACTIONS + P2M_ACTIONS}
 
         self._static_kwargs_for_tools = {
             "device": args.device,

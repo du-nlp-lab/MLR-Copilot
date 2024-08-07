@@ -35,3 +35,6 @@ trained_tokenizer/
 # data
 babylm_data
 checkpoint-*/
+
+# hf models info
+huggingface_models/

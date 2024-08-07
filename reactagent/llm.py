@@ -204,7 +204,7 @@ def complete_text(
     return completion
 
 # specify fast models for summarization etc
-FAST_MODEL = "Meta-Llama-3.1-8B-Instruct"
+FAST_MODEL = "claude-3-haiku"
 def complete_text_fast(prompt, *args, **kwargs):
     return complete_text(prompt, model=FAST_MODEL, *args, **kwargs)
 

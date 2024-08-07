@@ -190,34 +190,8 @@ def evaluate_model(load_dirs, save_path, output_column, work_dir = '.', **kwargs
 
 P2M_ACTIONS = [
     ActionInfo(
-        name="Generate Dataset",
-        description="Generate a dataset based on an instruction and examples. You can load the dataset later from `save_dir` using the load_from_disk function of the HuggingFace datasets library.",
-        usage={
-            "instruction": "an instruction on how to generate the output from the input",
-            "examples": "examples of input-output pairs",
-            "save_dir": "directory to save the generated dataset dict to. We recommend saving to data/generated/",
-            "num_train": "number of examples to generate in the training set",
-            "num_valid": "number of examples to generate in the validation set",
-            "num_test": "number of examples to generate in the test set",
-        },
-        return_value="The observation will be a success message if the dataset was generated successfully. Otherwise, an error message will be returned.",
-        is_primitive=False,
-        function=generate_dataset
-    ),
-    ActionInfo(
-        name="Retrieve Dataset",
-        description="Retrieve a suitable dataset based on a detailed description of the requirements. You can load the dataset later from `save_dir` using the load_from_disk function of the HuggingFace datasets library.",
-        usage={
-            "instruction": "an instruction on how to generate the output from the input",
-            "save_dir": "directory to save the generated dataset dict to. We recommend saving to data/retrieved/",
-        },
-        return_value="The observation will be a success message if the dataset was retrieved successfully. Otherwise, an error message will be returned.",
-        is_primitive=False,
-        function=retrieve_dataset
-    ),
-    ActionInfo(
         name="Retrieve Model",
-        description="Retrieve a suitable model based on a detailed description of the requirements. You can obtain the model given the name using the transformers.AutoModelForSeq2SeqLM.from_pretrained function.",
+        description="Retrieve a suitable model based on a detailed description of the requirements. You can obtain the model given the name using the transformers.AutoModel.from_pretrained function.",
         usage={
             "instruction": "an instruction on how to generate the output from the input",
         },
@@ -225,59 +199,97 @@ P2M_ACTIONS = [
         is_primitive=False,
         function=retrieve_model
     ),
-    ActionInfo(
-        name="Process Dataset",
-        description="Process dataset based on a detailed description of the requirements. You can load the processed data later from `save_dirs` using the load_from_disk function of the HuggingFace datasets library. The input text will be in the `model_input` column and the output text will be in the `model_output` column.",
-        usage={
-            "instruction": "an instruction on how to generate the output from the input",
-            "load_dirs": "directories to load the dataset dicts from, separated by colons",
-            "save_dirs": "directories to save the processed dataset dicts to, separated by colons. The order should match the order of the loaded datasets. We recommend saving to data/processed/",
-        },
-        return_value="The observation will be a success message if the data was processed successfully. Otherwise, an error message will be returned.",
-        is_primitive=False,
-        function=process_dataset
-    ),
-    ActionInfo(
-        name="Train Model",
-        description="Train a Seq2Seq model from HuggingFace transformers library using the processed datasets and given hyperparameters.",
-        usage={
-            "model_name": "name of the model to train",
-            "load_dirs": "directories to load the dataset dicts from, separated by colons",
-            "result_dir": "directory to save the trained model and tokenizer to. We recommend using results/{trial_id}/. The trained model will be available as `{result_dir}/trained_model/` and the tokenizer will be available as `{result_dir}/trained_tokenizer/`.",
-            "epochs": "number of epochs to train the model for",
-            "batch_size": "batch size for training the model",
-            "warmup_steps": "number of warmup steps for the optimizer",
-            "weight_decay": "weight decay for the optimizer",
-            "learning_rate": "learning rate for the optimizer",
-        },
-        return_value="The observation will be a success message if the model was trained successfully. Otherwise, an error message will be returned.",
-        is_primitive=False,
-        function=train_model
-    ),
-    ActionInfo(
-        name="Execute Model on Test Set",
-        description="Execute a trained model on the test sets of specified dataset dicts.",
-        usage={
-            "result_dir": "directory where the trained model and tokenizer are saved",
-            "load_dirs": "directories to load the dataset dicts from, separated by colons",
-            "save_path": "file to save the results of the model execution in json format",
-            "batch_size": "batch size for executing the model",
-            "input_column": "column name of the input text",
-        },
-        return_value="The observation will be a success message if the model was executed successfully. Otherwise, an error message will be returned.",
-        is_primitive=False,
-        function=execute_model,
-    ),
-    ActionInfo(
-        name="Evaluate Model",
-        description="Evaluate a trained model on the test sets of specified dataset dicts.",
-        usage={
-            "load_dirs": "directories to load the dataset dicts from, separated by colons",
-            "save_path": "file to load the results of the model execution in json format",
-            "output_column": "column name of the output text",
-        },
-        return_value="The values for various evaluation metrics will be returned.",
-        is_primitive=False,
-        function=evaluate_model,
-    )
 ]
+# P2M_ACTIONS = [
+#     ActionInfo(
+#         name="Generate Dataset",
+#         description="Generate a dataset based on an instruction and examples. You can load the dataset later from `save_dir` using the load_from_disk function of the HuggingFace datasets library.",
+#         usage={
+#             "instruction": "an instruction on how to generate the output from the input",
+#             "examples": "examples of input-output pairs",
+#             "save_dir": "directory to save the generated dataset dict to. We recommend saving to data/generated/",
+#             "num_train": "number of examples to generate in the training set",
+#             "num_valid": "number of examples to generate in the validation set",
+#             "num_test": "number of examples to generate in the test set",
+#         },
+#         return_value="The observation will be a success message if the dataset was generated successfully. Otherwise, an error message will be returned.",
+#         is_primitive=False,
+#         function=generate_dataset
+#     ),
+#     ActionInfo(
+#         name="Retrieve Dataset",
+#         description="Retrieve a suitable dataset based on a detailed description of the requirements. You can load the dataset later from `save_dir` using the load_from_disk function of the HuggingFace datasets library.",
+#         usage={
+#             "instruction": "an instruction on how to generate the output from the input",
+#             "save_dir": "directory to save the generated dataset dict to. We recommend saving to data/retrieved/",
+#         },
+#         return_value="The observation will be a success message if the dataset was retrieved successfully. Otherwise, an error message will be returned.",
+#         is_primitive=False,
+#         function=retrieve_dataset
+#     ),
+#     ActionInfo(
+#         name="Retrieve Model",
+#         description="Retrieve a suitable model based on a detailed description of the requirements. You can obtain the model given the name using the transformers.AutoModelForSeq2SeqLM.from_pretrained function.",
+#         usage={
+#             "instruction": "an instruction on how to generate the output from the input",
+#         },
+#         return_value="The observation will be a list of suitable models. You can choose one of them based on the requirements.",
+#         is_primitive=False,
+#         function=retrieve_model
+#     ),
+#     ActionInfo(
+#         name="Process Dataset",
+#         description="Process dataset based on a detailed description of the requirements. You can load the processed data later from `save_dirs` using the load_from_disk function of the HuggingFace datasets library. The input text will be in the `model_input` column and the output text will be in the `model_output` column.",
+#         usage={
+#             "instruction": "an instruction on how to generate the output from the input",
+#             "load_dirs": "directories to load the dataset dicts from, separated by colons",
+#             "save_dirs": "directories to save the processed dataset dicts to, separated by colons. The order should match the order of the loaded datasets. We recommend saving to data/processed/",
+#         },
+#         return_value="The observation will be a success message if the data was processed successfully. Otherwise, an error message will be returned.",
+#         is_primitive=False,
+#         function=process_dataset
+#     ),
+#     ActionInfo(
+#         name="Train Model",
+#         description="Train a Seq2Seq model from HuggingFace transformers library using the processed datasets and given hyperparameters.",
+#         usage={
+#             "model_name": "name of the model to train",
+#             "load_dirs": "directories to load the dataset dicts from, separated by colons",
+#             "result_dir": "directory to save the trained model and tokenizer to. We recommend using results/{trial_id}/. The trained model will be available as `{result_dir}/trained_model/` and the tokenizer will be available as `{result_dir}/trained_tokenizer/`.",
+#             "epochs": "number of epochs to train the model for",
+#             "batch_size": "batch size for training the model",
+#             "warmup_steps": "number of warmup steps for the optimizer",
+#             "weight_decay": "weight decay for the optimizer",
+#             "learning_rate": "learning rate for the optimizer",
+#         },
+#         return_value="The observation will be a success message if the model was trained successfully. Otherwise, an error message will be returned.",
+#         is_primitive=False,
+#         function=train_model
+#     ),
+#     ActionInfo(
+#         name="Execute Model on Test Set",
+#         description="Execute a trained model on the test sets of specified dataset dicts.",
+#         usage={
+#             "result_dir": "directory where the trained model and tokenizer are saved",
+#             "load_dirs": "directories to load the dataset dicts from, separated by colons",
+#             "save_path": "file to save the results of the model execution in json format",
+#             "batch_size": "batch size for executing the model",
+#             "input_column": "column name of the input text",
+#         },
+#         return_value="The observation will be a success message if the model was executed successfully. Otherwise, an error message will be returned.",
+#         is_primitive=False,
+#         function=execute_model,
+#     ),
+#     ActionInfo(
+#         name="Evaluate Model",
+#         description="Evaluate a trained model on the test sets of specified dataset dicts.",
+#         usage={
+#             "load_dirs": "directories to load the dataset dicts from, separated by colons",
+#             "save_path": "file to load the results of the model execution in json format",
+#             "output_column": "column name of the output text",
+#         },
+#         return_value="The values for various evaluation metrics will be returned.",
+#         is_primitive=False,
+#         function=evaluate_model,
+#     )
+# ]
