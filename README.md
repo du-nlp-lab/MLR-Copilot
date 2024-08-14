@@ -1,4 +1,4 @@
-# Title Here - Conduct Experimentation Based on Research Idea
+# Conduct Experimentation Based on Research Idea
 
 ## Setup
 Begin by cloning this repo.
