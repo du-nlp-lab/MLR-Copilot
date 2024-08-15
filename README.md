@@ -1,4 +1,4 @@
-# Conduct Experimentation Based on Research Idea
+# MLR-Copilt: Autonomous Machine Learning Research Agent based on Large Language Models
 
 ## Setup
 Begin by cloning this repo.
