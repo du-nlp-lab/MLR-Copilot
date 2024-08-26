@@ -2,15 +2,11 @@
 
 <!-- [![Colab](https://colab.research.google.com/assets/colab-badge.svg)]() -->
 
-## Abstract
+MLR-Copilot is a framework where LLMs mimic researchers’ thought processes, designed to enhance the productivity of machine learning research by automating the generation and implementation of research ideas.
 
-Machine learning research, crucial for technological advancements and innovation, often faces significant challenges due to its inherent complexity, slow pace of experimentation, and the necessity for specialized expertise. MLR-Copilot presents a systematic framework designed to enhance machine learning research productivity through the automatic generation and implementation of research ideas using Large Language Model (LLM) agents. The framework consists of three phases: research idea generation, experiment implementation, and implementation execution. We evaluate our framework on five machine learning research tasks, showing its potential to facilitate research progress and innovations.
+It begins with a research paper, autonomously generating and validating these ideas, while incorporating human feedback to help reach executable research outcomes.
 
-## Introduction
-
-The increasing complexity of scientific research and the rapid expansion of scientific knowledge necessitate innovative approaches to facilitate and accelerate the research process. Traditional methodologies involve labor-intensive tasks such as literature review, hypothesis formulation, experimental design, implementation, and execution, which can be time-consuming and prone to human error. MLR-Copilot leverages LLM agents to streamline this process, automating the generation and implementation of research ideas.
-
-### Framework Overview
+## Framework Overview
 
 MLR-Copilot operates in three integrated phases:
 
