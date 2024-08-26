@@ -1,4 +1,4 @@
-# MLR-Copilot: Autonomous Machine Learning Research Agent based on Large Language Models
+# MLR-Copilot: Autonomous Machine Learning Research based on Large Language Models Agents
 
 <!-- [![Colab](https://colab.research.google.com/assets/colab-badge.svg)]() -->
 
