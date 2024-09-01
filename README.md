@@ -8,7 +8,7 @@ It begins with a research paper, autonomously generating and validating these id
 
 
 
-### Demo Recording
+### Demo ([Link](https://huggingface.co/spaces/du-lab/MLR-Copilot))
 
 https://github.com/user-attachments/assets/1259e2ad-efc8-4a3c-bd4d-d604c46ebd55
 
