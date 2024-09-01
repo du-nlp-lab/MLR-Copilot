@@ -10,7 +10,9 @@ It begins with a research paper, autonomously generating and validating these id
 
 ### Demo Recording
 
-https://github.com/user-attachments/assets/62bb9807-7921-4e90-b16b-f13361e85df1
+https://github.com/user-attachments/assets/1259e2ad-efc8-4a3c-bd4d-d604c46ebd55
+
+
 ## Framework Overview
 
 MLR-Copilot operates in three integrated phases:
