@@ -1,5 +1,6 @@
-# MLR-Copilot: Autonomous Machine Learning Research based on Large Language Models Agents
+# [MLR-Copilot: Autonomous Machine Learning Research based on Large Language Models Agents](https://www.arxiv.org/abs/2408.14033)
 [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1aMh94R1Nl6r0wTzRVJFzsx-S3pwadmFD?usp=sharing)
+
 
 
 MLR-Copilot is a framework where LLMs mimic researchers’ thought processes, designed to enhance the productivity of machine learning research by automating the generation and implementation of research ideas.
