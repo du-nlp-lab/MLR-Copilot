@@ -1,7 +1,22 @@
-# [MLR-Copilot: Autonomous Machine Learning Research based on Large Language Models Agents](https://www.arxiv.org/abs/2408.14033)
+# MLR-Copilot: Autonomous Machine Learning Research based on Large Language Models Agents
 [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1aMh94R1Nl6r0wTzRVJFzsx-S3pwadmFD?usp=sharing)
+[![arXiv](https://img.shields.io/badge/arXiv-2310.01783-b31b1b.svg)](https://www.arxiv.org/abs/2408.14033)
 
+This repo provides the source code of our paper: [MLR-Copilot: Autonomous Machine Learning Research based on Large Language Models Agents.](https://www.arxiv.org/abs/2408.14033)
+[[PDF]](https://www.arxiv.org/pdf/2408.14033)[[Twitter]](https://x.com/Xinya16/status/1829962980999774481)[[Demo]](https://huggingface.co/spaces/du-lab/MLR-Copilot) If you discuss or use MLR-Copilot in your research, please cite us!
+```bibtex
+@misc{li2024mlrcopilotautonomousmachinelearning,
+      title={MLR-Copilot: Autonomous Machine Learning Research based on Large Language Models Agents}, 
+      author={Ruochen Li and Teerth Patel and Qingyun Wang and Xinya Du},
+      year={2024},
+      eprint={2408.14033},
+      archivePrefix={arXiv},
+      primaryClass={cs.AI},
+      url={https://arxiv.org/abs/2408.14033}, 
+}
+```
 
+##
 
 MLR-Copilot is a framework where LLMs mimic researchers’ thought processes, designed to enhance the productivity of machine learning research by automating the generation and implementation of research ideas.
 
@@ -9,7 +24,7 @@ It begins with a research paper, autonomously generating and validating these id
 
 
 
-### Demo ([Link](https://huggingface.co/spaces/du-lab/MLR-Copilot))
+## Demo  ([Link](https://huggingface.co/spaces/du-lab/MLR-Copilot))
 
 https://github.com/user-attachments/assets/1259e2ad-efc8-4a3c-bd4d-d604c46ebd55
 
@@ -28,6 +43,9 @@ MLR-Copilot operates in three integrated phases:
 *Figure 2: Our MLR-Copilot Framework. LLM IdeaAgent (leftmost grey component) performs research idea generation, including hypothesis and experimental design (Stage 1). ExperimentAgent implements and executes the experiments.*
 
 ## Quick Start
+
+[Open in Colab](https://colab.research.google.com/drive/1aMh94R1Nl6r0wTzRVJFzsx-S3pwadmFD?usp=sharing)
+
 
 ### Setup
 
