@@ -23,12 +23,6 @@ MLR-Copilot is a framework where LLMs mimic researchers’ thought processes, de
 It begins with a research paper, autonomously generating and validating these ideas, while incorporating human feedback to help reach executable research outcomes.
 
 
-
-## Demo  ([Link](https://huggingface.co/spaces/du-lab/MLR-Copilot))
-
-https://github.com/user-attachments/assets/1259e2ad-efc8-4a3c-bd4d-d604c46ebd55
-
-
 ## Framework Overview
 
 MLR-Copilot operates in three integrated phases:
@@ -37,10 +31,13 @@ MLR-Copilot operates in three integrated phases:
 2. **Experiment Implementation**: Translates experimental plans into executable experiments using retrieved prototype code and models.
 3. **Implementation Execution**: Runs the experiments with mechanisms for human feedback and iterative debugging.
 ![MLR-Copilot Framework](gif/figure1.png)
-*Figure 1: The autonomous machine learning research task. We take the research paper as input and output the research idea (i.e., research hypothesis and experiment plan) with execution results.*
 
-![MLR-Copilot Process](gif/figure2.gif)
-*Figure 2: Our MLR-Copilot Framework. LLM IdeaAgent (leftmost grey component) performs research idea generation, including hypothesis and experimental design (Stage 1). ExperimentAgent implements and executes the experiments.*
+
+## Demo  ([Link](https://huggingface.co/spaces/du-lab/MLR-Copilot))
+
+https://github.com/user-attachments/assets/1259e2ad-efc8-4a3c-bd4d-d604c46ebd55
+
+
 
 ## Quick Start
 
