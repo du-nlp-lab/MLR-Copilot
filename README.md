@@ -3,7 +3,7 @@
 [![arXiv](https://img.shields.io/badge/arXiv-2310.01783-b31b1b.svg)](https://www.arxiv.org/abs/2408.14033)
 
 This repo provides the source code of our paper: [MLR-Copilot: Autonomous Machine Learning Research based on Large Language Models Agents.](https://www.arxiv.org/abs/2408.14033)
-[[PDF]](https://www.arxiv.org/pdf/2408.14033)[[Twitter]](https://x.com/Xinya16/status/1829962980999774481)[[Demo]](https://huggingface.co/spaces/du-lab/MLR-Copilot) If you discuss or use MLR-Copilot in your research, please cite us!
+[[PDF]](https://www.arxiv.org/pdf/2408.14033)[[Twitter]](https://x.com/Xinya16/status/1829962980999774481) If you discuss or use MLR-Copilot in your research, please cite us!
 ```bibtex
 @misc{li2024mlrcopilotautonomousmachinelearning,
       title={MLR-Copilot: Autonomous Machine Learning Research based on Large Language Models Agents}, 
