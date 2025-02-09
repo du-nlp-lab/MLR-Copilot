@@ -33,7 +33,7 @@ MLR-Copilot operates in three integrated phases:
 ![MLR-Copilot Framework](gif/figure1.png)
 
 
-## Demo  ([Link](https://huggingface.co/spaces/du-lab/MLR-Copilot))
+## Demo
 
 https://github.com/user-attachments/assets/1259e2ad-efc8-4a3c-bd4d-d604c46ebd55
 
